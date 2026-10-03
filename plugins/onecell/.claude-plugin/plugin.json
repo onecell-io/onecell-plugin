@@ -2,10 +2,10 @@
   "name": "onecell",
   "description": "onecell's MCP server and skills in one install: your Inbox, cells and cluster hive, searchable and citable by Claude Code.",
   "author": {
-    "name": "32 Boroughs",
+    "name": "onecell",
     "url": "https://onecell.io"
   },
   "homepage": "https://onecell.io/settings/agents",
-  "repository": "https://github.com/32-Boroughs/onecell-plugin",
+  "repository": "https://github.com/onecell-io/onecell-plugin",
   "keywords": ["memory", "notes", "mcp", "knowledge", "onecell"]
 }

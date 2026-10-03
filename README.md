@@ -12,7 +12,7 @@ This plugin installs both halves in one step:
 In Claude Code:
 
 ```
-/plugin marketplace add 32-Boroughs/onecell-plugin
+/plugin marketplace add onecell-io/onecell-plugin
 /plugin install onecell@onecell
 ```
 
