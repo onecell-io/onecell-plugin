@@ -115,11 +115,11 @@ When Notion, shopping, email, research, coding, or any other loaded skill produc
 
 Human paste (Grok / Codex / Claude / Cowork):
 
-> Save this session to my onecell Inbox as a draft. Use prompt blocks for key turns, text blocks with html links for URLs, code blocks for logs or pasted artifacts, and one remember for the decision. Do not publish or put it on the hive unless I say so. Reply with the document UUID link.
+> Save this session to onecell as a draft in my Capture cell (my Inbox if I have no Capture cell). Use prompt blocks for key turns, text blocks with html links for URLs, code blocks for logs or pasted artifacts, and one remember for the decision. Do not publish or put it on the hive unless I say so. Reply with the document UUID link.
 
 Agent recipe:
 
-1. Destination default: **Inbox**. Use a named cell only if the human names it.
+1. Destination default: **Capture**, the private cell your own drafts go to (`list_cells`: a cell you own with slug `capture`); **Inbox** if there is none. Use a named cell only if the human names it.
 2. `create_document` with `dry_run` true, then false. Title like `Session — {client} — {date}`.
 3. Blocks: short `heading` summary → `prompt` turns (truncate long bodies) → `text` (html links for URLs) → `code` for logs/pastes → more `text` for decisions. Do **not** dump raw chat logs onto the hive as truth.
 4. Stay **draft** unless the human asks to publish. Hive, shared cell, or publish → Decision points.
