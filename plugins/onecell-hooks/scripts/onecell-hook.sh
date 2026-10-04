@@ -9,7 +9,7 @@
 # It talks to onecell itself, with its own key, so it works however onecell's MCP server
 # is set up in the client (plugin, `claude mcp add`, or not at all).
 #
-# Needs: curl, jq, and a key (an ic_… key from https://onecell.io/settings/agents; Drafts only is
+# Needs: curl (7.55 or later), jq, and a key (an ic_… key from https://onecell.io/settings/agents; Drafts only is
 # enough): CLAUDE_PLUGIN_OPTION_API_KEY, which Claude Code sets from the plugin's stored
 # setting, or ONECELL_API_KEY. Never blocks a session: any failure prints nothing, exits 0.
 
@@ -35,19 +35,26 @@ case "$name" in
 esac
 
 client="codex"; [ -n "$CLAUDE_PLUGIN_OPTION_API_KEY" ] && client="claude-code"
-args=$(printf '%s' "$input" | jq -c --arg event "$event" --arg session "$session" --arg client "$client" '{
-  event: $event, session_id: $session, client: $client,
-  prompt: (.prompt // null), last_message: (.last_assistant_message // null), source: (.source // null)
-} | with_entries(select(.value != null))')
 
-body=$(jq -cn --argjson args "$args" '{jsonrpc: "2.0", id: 1, method: "tools/call",
-  params: {name: "hook_event", arguments: $args}}')
+# Neither the key nor the prompt goes on a command line, where any other user of this
+# machine could read it with ps: the request body (which carries the prompt) is built from
+# stdin into a file only this user can read, and the key reaches curl on stdin (-H @-).
+umask 077
+body_file=$(mktemp "${TMPDIR:-/tmp}/onecell-hook.XXXXXX") || exit 0
+trap 'rm -f "$body_file"' EXIT
+printf '%s' "$input" | jq -c --arg event "$event" --arg session "$session" --arg client "$client" '{
+  jsonrpc: "2.0", id: 1, method: "tools/call",
+  params: {name: "hook_event", arguments: ({
+    event: $event, session_id: $session, client: $client,
+    prompt: (.prompt // null), last_message: (.last_assistant_message // null), source: (.source // null)
+  } | with_entries(select(.value != null)))}
+}' > "$body_file" 2>/dev/null || exit 0
 
-answer=$(curl -sS --max-time 8 "$ONECELL_URL/api/mcp" \
-  -H "Authorization: Bearer $ONECELL_API_KEY" \
+answer=$(printf 'Authorization: Bearer %s\n' "$ONECELL_API_KEY" | curl -sS --max-time 8 "$ONECELL_URL/api/mcp" \
+  -H @- \
   -H 'Content-Type: application/json' \
   -H 'Accept: application/json, text/event-stream' \
-  -d "$body" 2>/dev/null | jq -r '.result.content[0].text // empty' 2>/dev/null)
+  --data-binary @"$body_file" 2>/dev/null | jq -r '.result.content[0].text // empty' 2>/dev/null)
 
 # onecell answers in the hook shape Codex reads (hookSpecificOutput.additionalContext, or
 # {"decision":"block",…} for a stop), so it goes out as is.
