@@ -160,7 +160,7 @@ Mutating tools default `dry_run` true. Call once, read `{applied, reason}`, then
 - Tags classify documents for a work queue: `create_document` `tags` (lowercase, `key:value` allowed, e.g. `ticket`, `state:todo`; 20 max). Move state with `update_document` `tags_add` / `tags_remove` and `expected_version` — no `blocks` needed. Find them with `list_documents` `tags` (all must match; `state:*` matches a prefix); every row carries its tags.
 - Ids on blocks are generated if omitted.
 - Title and summary length warnings (`title.short`, `title.long`, `summary.short`, `summary.long`) are advice and never block a publish. Aim for a title under 65 characters and a one- or two-sentence summary under 200, but do not rewrite or retry a write just to clear one.
-- Pictures and attachments: `upload_asset` with `content_base64` (8 MB max; the bytes decide the type), then put the returned `block` in the document. Pass `document_id` for the document it is going into — create the document first if needed — so the file belongs to that document's owner and keeps showing for everyone who can read it, even in a shared cell you later lose.
+- Pictures and attachments: for a file on disk, `create_upload` (with `dry_run: false`) and PUT the file to the returned `upload_url` with the given `curl` command — the bytes never pass through the conversation. The link is single-use and lasts 10 minutes. `upload_asset` with `content_base64` costs about a token per 3 characters, so keep it for tiny files or clients with no shell. Either way 8 MB max, the bytes decide the type, and you put the returned `block` in the document. Pass `document_id` for the document it is going into — create the document first if needed — so the file belongs to that document's owner and keeps showing for everyone who can read it, even in a shared cell you later lose.
 - `delete_document` moves to trash (out of search immediately). `restore_document` brings it back. `list_documents` with `trash: true` lists the bin. After 30 days the reconciler hard-deletes.
 - Public pages: a document is readable at `/p/<slug>` only when it is published *and* its visibility is `public` (`update_document` `visibility`). Ask the human before making anything public; a draft-only key cannot change visibility. Published, public documents tagged `help:recipe` in onecell's own recipes cell appear on onecell.io/help.
 - Move between cells you own, in any cluster, with `update_document` `cell` — follow Move work. Nested children come along. Granted cells cannot be a destination. In the UI, "Move to…" does the same; drop a row onto another in the same cell to nest; drop it on the cell in the sidebar to un-nest.
@@ -178,11 +178,11 @@ Do not smuggle a diagram into a text/code block.
 | Title | `{type: heading, level: 1-4, text}` |
 | Diagram | `{type: mermaid, source, caption?}` |
 | Sketch | `{type: drawing, scene, caption}` — caption required to publish. Read caption; skip scene JSON. Write Excalidraw elements (rectangle, ellipse, diamond, arrow, line, text); share pages draw them until the editor makes its own snapshot. |
-| Picture | `{type: image, assetId, alt, caption?}` — `upload_asset` (kind `image`) first for the `assetId`; alt required to publish; caption optional |
+| Picture | `{type: image, assetId, alt, caption?}` — `create_upload` (kind `image`) first for the `assetId`; alt required to publish; caption optional |
 | Transclusion | `{type: embed, documentId}` — unreadable targets resolve null; on public/share pages only a published *public* target in the same workspace expands |
 | Agent turn | `{type: prompt, role: user / assistant / system, body, model?}` — AI-session narrative, not Dream chrome |
 | Link card | `{type: bookmark, url, title, note?}` — http(s) URL required to publish |
-| Attachment | `{type: file, assetId, filename, note?}` — `upload_asset` (kind `file`) first: PDF, text, Markdown, CSV, JSON, zip, Office; images use `image` |
+| Attachment | `{type: file, assetId, filename, note?}` — `create_upload` (kind `file`) first: PDF, text, Markdown, CSV, JSON, zip, Office; images use `image` |
 | Code | `{type: code, lang, code}` |
 | Aside | `{type: callout, variant: info / warning / danger / success / quote, html}` |
 | Grid | `{type: table, header, rows, align?}` — every row the same length; align per column: left / center / right |
@@ -281,11 +281,11 @@ Your own: `list_mentions` (unread first; who, cell, document, passage, link). Pa
 
 ## Team
 
-- `list_members` then `share_cell` (owner only). Default role viewer. Check `mailed`. Inbox cannot be shared.
+- `list_members` then `share_cell` (owner only; dry run first). Default role viewer. Check `mailed`. Inbox cannot be shared.
 - A cell can also be open to its whole cluster: `share_cell` with `cluster` (`none`, `viewer`, `editor`; owner only; dry run first). Everyone in the cluster gets that level, including people who join later, so ask the human first. `list_cells` / `list_cell_grants` show `clusterAccess`. A new member gets the hive plus every cell open to the cluster; nothing else.
 - Share, invite, or public link → Decision points first.
 - `invite_member`: they sign in with that email. `send_email: false` returns a join `url` to paste. `resend_invite` / `list_invites` for pending links.
-- Outward link: `share_document` — token shown **once**. Refuses Inbox (`inbox_unshareable`).
+- Outward link: `share_document` — dry_run first, then ask the human; the token is shown **once**. Refuses Inbox (`inbox_unshareable`). `revoke_share`, `revoke_cell_grant` and `forget` also dry-run first.
 
 ## Isolation
 
