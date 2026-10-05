@@ -39,7 +39,7 @@ One login can belong to several clusters. Inbox is one private cell shown in eve
 
 1. `list_cells`: note `owned`, slug, `embedding_policy` (`none` is never searchable; `local_only` needs a local embedder). `create_cell` opens one in your workspace, shared with no one until `share_cell`.
 2. `search` the question (optional `cell`). Hits come grouped by document with short passages and heading trails; a query always returns candidates, so judge by score. For settled, load-bearing context (what to build on, not every mention) pass `weight: true`: among close matches, documents more sources link to rank higher.
-3. `get_document` only for the hit you will use. On a long page: `outline`, then `section` (a heading's id) or `blocks` (ids).
+3. `get_document` only for the hit you will use. On a long page: `outline`, then `section` (a heading's id) or `blocks` (ids). Every read carries `weight` (how much links to it); `links: true` adds who links here and what it links to, to follow how a piece is built on.
 
 Cite as: cell · heading path · passage. Never paste a whole document into the reply.
 
