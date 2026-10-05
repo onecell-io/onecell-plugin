@@ -12,56 +12,40 @@ description: >
 
 # onecell
 
-A workspace is one person. Inbox is private. The hive is a cell teammates granted you. You see own cells plus grants — never anyone else's Inbox.
+A workspace is one person. Inbox is private. The hive is a cell teammates share with you. You see your own cells plus what is shared with you, never anyone else's Inbox.
 
-Connect at `{origin}/api/mcp` (OAuth) or Bearer `ic_…`. First-time install: fetch `{origin}/agent-setup/prompt.md` and run this client's section (Codex: `codex mcp add` + `codex mcp login` — see `{origin}/agent-setup/codex`; Cowork: Claude.ai Connectors custom URL; Grok Bot: add MCP URL in chat, not Cursor mcp.json). Fetch this skill from `{origin}/skills/onecell.md`.
+Connect at `{origin}/api/mcp` (OAuth) or Bearer `ic_…`. First install: fetch `{origin}/agent-setup/prompt.md` and run this client's section (Codex: `codex mcp add` + `codex mcp login`, see `{origin}/agent-setup/codex`; Cowork: Claude.ai Connectors custom URL; Grok: add the MCP URL in chat). This skill lives at `{origin}/skills/onecell.md`.
 
 ## Keep this skill fresh
 
-Saved copies drift. Before meaningful hive work in a session (search, write, remember, or park):
-
-1. Re-fetch `{origin}/skills/onecell.md` (and `{origin}/skills/onecell-bridge.md` when this client keeps companion skills).
-2. Overwrite `skills/onecell/SKILL.md` (and `skills/onecell-bridge/SKILL.md` if present).
-3. Do this **once per agent session** after MCP is connected — do not trust a days-old local copy.
-4. If the live skill names tools you do not have, stop and re-run agent-setup; skill file alone is not a working install.
+Saved copies drift. Once per agent session, after MCP connects and before real hive work: re-fetch `{origin}/skills/onecell.md` (and `{origin}/skills/onecell-bridge.md` if this client keeps it) and overwrite the local copies. If the live skill names tools you do not have, re-run agent-setup: a skill file alone is not a working install.
 
 ## Health check
 
-Skill on disk ≠ done. After connect, and again when tools seem wrong:
-
-1. Confirm MCP tools include at least: `list_cells`, `search`, `recall`, `remember`, `get_fact`, `create_document`, `get_document`.
-2. Call `list_cells` — expect Inbox plus any granted cells (hive when shared).
-2b. Call `get_active_cluster` (and `list_clusters` if you may belong to more than one).
-3. Call `recall` (empty query lists recent facts) **or** `search` with a short real query.
-3b. A tool this skill names is missing (say `move_cell`)? Your client cached an older tool list — onecell shipped since you connected. Ask the human to reconnect the onecell MCP (Claude Code: `/mcp` → reconnect onecell) rather than working around it.
-4. Only then treat setup as healthy. Cite cell · heading · passage on search hits; never invent a cite.
-
+1. Tools include at least `list_cells`, `search`, `recall`, `remember`, `get_fact`, `create_document`, `get_document`.
+2. `list_cells` shows Inbox plus shared cells; `get_active_cluster` (and `list_clusters` if you may be in several).
+3. `recall` (empty query lists recent facts) or `search` a short real query.
+4. A tool this skill names is missing (say `move_cell`)? The client cached an old tool list. Ask the human to reconnect onecell (Claude Code: `/mcp` → reconnect) rather than working around it.
 
 ## Clusters
 
-One login may belong to several clusters. Session and API keys still bind to one workspace; org-scoped tools honor the **active** cluster preference.
+One login can belong to several clusters. Inbox is one private cell shown in every cluster; every other cell, hive included, belongs to one cluster. `list_cells`, `search`, `recall` and `list_documents` cover the **active** cluster plus Inbox; naming a cell by slug or id works in any cluster.
 
-- Before invite or Members work: `list_clusters` / `get_active_cluster`. Switch with `set_active_cluster` (dry_run first).
-- Inbox = one private cell per login, shown in every cluster. Every other cell (the hive included) belongs to one cluster.
-- `list_cells`, `search`, `recall` and `list_documents` cover the **active** cluster plus Inbox. Naming a cell by slug or id works in any cluster.
-- The active cluster is **one preference shared with the human's UI**. Don't `set_active_cluster` just to look around — `list_cells` with `all_clusters: true` sees every cluster without moving their sidebar. To move work between clusters, see Move work.
-- Work in another cluster by naming cells, not by switching: every tool that takes `cell` (`search`, `recall`, `list_documents`, `create_document`, `remember`, `update_document`) accepts one from any cluster. Switch only when the human asks, or for Members / invite work there (Decision points → Switch cluster).
-- New cells land in the active cluster. Switching changes what you see, never merges rosters or writes across clusters silently.
-- `create_cluster` names a new cluster while already membered — and makes it active, which switches the human's sidebar too (Decision points → Create a cluster). `join_cluster` accepts a pending invite by id for this email.
-- Invite / `list_invites` / `list_members` / `share_cell` honor the active cluster only. Owner of the active cluster invites; INVITE_ADMINS is break-glass only.
+- The active cluster is one preference shared with the human's sidebar. To look around, use `list_cells` `all_clusters: true`; to work elsewhere, name the `cell`. Switch (`set_active_cluster`) only when the human asks or for member and invite work there (Decision points → Switch cluster).
+- New cells land in the active cluster. Invites, `list_invites`, `list_members` and `share_cell` follow the active cluster; its owner invites.
+- `create_cluster` makes the new cluster active, switching the human's sidebar (Decision points → Create a cluster). `join_cluster` accepts a pending invite for this email.
 
 ## First moves
 
-1. `list_cells` — note `owned`, slug, `embedding_policy`. `none` is not searchable; `local_only` needs a local embedder.
-1b. `create_cell` opens a cell in **your** workspace. Inbox is reserved. It is not shared until `share_cell`. dry_run first. Humans can rename a cell or archive it (Inbox cannot be archived).
-2. `search` the question (optional `cell`). Hits are grouped by document (5 by default), each with up to three short passages and heading trails. Judge by score; a query always returns candidates.
-3. `get_document` only for the hit you will use. On a long page read less: `outline` first, then `section` (a heading id) or `blocks` (ids). Do not list-and-dump.
+1. `list_cells`: note `owned`, slug, `embedding_policy` (`none` is never searchable; `local_only` needs a local embedder). `create_cell` opens one in your workspace, shared with no one until `share_cell`.
+2. `search` the question (optional `cell`). Hits come grouped by document with short passages and heading trails; a query always returns candidates, so judge by score. For settled, load-bearing context (what to build on, not every mention) pass `weight: true`: among close matches, documents more sources link to rank higher.
+3. `get_document` only for the hit you will use. On a long page: `outline`, then `section` (a heading's id) or `blocks` (ids).
 
 Cite as: cell · heading path · passage. Never paste a whole document into the reply.
 
 ## Decision points
 
-Some choices belong to the human. Ask in one line and name the default. Skip a question the human already answered (e.g. they pasted the Park prompt). If this client cannot ask, take the default — it is always the least exposed choice. `dry_run` checks the call; this table checks the person — do both.
+Some choices belong to the human. Ask in one line and name the default; skip what they already answered. If this client cannot ask, take the default: it is always the least exposed choice. `dry_run` checks the call; this table checks the person. Do both.
 
 | Moment | Ask | Default |
 |---|---|---|
@@ -69,164 +53,136 @@ Some choices belong to the human. Ask in one line and name the default. Skip a q
 | Shape — `recall` / `search` found a close note or fact | "Update {title}, or start a new note?" One sentence → `remember`; longer → document. | New Inbox draft that links the near match. Never overwrite. |
 | Destination | "Inbox (private) or {hive / named cell}?" Offer only cells you can write to. | Inbox |
 | New cell | "Create cell {name}, or use {existing}?" | Existing cell, else Inbox |
-| Publish | "Publish, or keep as draft?" Run `validate_document` `strict: true` first; say what it would fix. | Draft |
-| Contradicting fact | "Replace '{old}' with '{new}'?" (`forget` + `remember`) | Keep the old fact. Report the conflict. |
+| Publish | "Publish, or keep as draft?" `validate_document` `strict: true` first; say what it would fix. | Draft |
+| Contradicting fact | "Replace '{old}' with '{new}'?" (`remember` with `supersedes`) | Keep the old fact. Report the conflict. |
 | Share a cell | "Share {cell} with {who} as viewer or editor?" | Viewer |
 | Public link | "Create a public link? Anyone with it can read {title}." | No link |
 | Invite | "Email the invite, or give you a join link to paste?" | Email |
 | Trash | "Trash {title}? Restorable for 30 days." | Don't |
-| Move | "Move {title} (+{n} nested) from {cell} to {cell} in {cluster}?" — see Move work. | Don't |
-| Create a cluster | "Create cluster {name}? It becomes your active cluster, so your onecell sidebar switches to it." Dry run first — it runs the real checks. | Don't |
-| Switch cluster | "Switch to {cluster}? Your onecell sidebar switches too." | Don't. Name cells with `cell`, or find them with `list_cells` `all_clusters`. |
+| Move | "Move {title} (+{n} nested) from {cell} to {cell} in {cluster}?" See Move work. | Don't |
+| Create a cluster | "Create cluster {name}? It becomes your active cluster, so your sidebar switches to it." | Don't |
+| Switch cluster | "Switch to {cluster}? Your sidebar switches too." | Don't. Name cells with `cell`, or find them with `list_cells` `all_clusters`. |
 | Move a cell to a cluster | "Move {cell} ({n} docs) to {cluster}? {people} aren't in {cluster}, so it leaves their sidebar and search." | Don't |
 | Move out of a shared cell | "{from} is shared — the people there lose {title}. Move anyway?" | Don't |
-| Mention | "Mention {name}? They're told in onecell and by their agent." | Don't — mention only someone the human named, or asked you to bring in |
+| Mention | "Mention {name}? They're told in onecell and by their agent." | Don't — only someone the human named or asked to bring in |
 
 ## Move work
 
-Moving is the human's call: where work lives decides who sees it. Guide them to a destination; never pick one silently.
+Where work lives decides who sees it, so moving is the human's call. Never pick a destination silently.
 
-1. **Which document.** If the human named it exactly, use it. Otherwise `search` and offer up to three: "Move {title} ({cell}), or one of these?" Several documents → list them and confirm the set once.
-2. **Where to.** `list_cells` with `all_clusters: true`. Offer two or three likely cells, grouped by cluster, active cluster first — judge by name and by where related notes live (`search` the topic). Always include Inbox: it is private and shows in every cluster. Only cells with `owned: true` can receive a move. If nothing fits, ask whether to create one (Decision points → New cell) — don't invent a cell.
-3. **Dry run.** `update_document` with `id`, `cell`, `dry_run: true`. Read `move`: `children` come along, `to.cluster` is where it lands, `leaves_shared` means people who can see the current cell lose it.
-4. **Confirm in one line**: "Move {title} (+{children} nested) from {from} to {to} in {cluster}?" If `leaves_shared`, say who loses it and default to not moving. No yes → do nothing.
-5. **Move**: the same call with `dry_run: false`. Reply with `{origin}/cells/{to.slug}/{documentId}`. If it landed outside the active cluster, say so: "It's in {cluster} — switch there in System to see it in your sidebar." Don't switch for them unless asked.
+1. **Which.** Use the document the human named; otherwise `search` and offer up to three. Several → confirm the set once.
+2. **Where.** `list_cells` `all_clusters: true`; offer two or three cells you own (`owned: true`), grouped by cluster, active first, plus Inbox. Nothing fits → ask about a new cell; never invent one.
+3. **Dry run** `update_document` with `id` and `cell`. Read `move`: `children` come along, `to.cluster` is where it lands, `leaves_shared` means people who see the current cell lose it.
+4. **Confirm** in one line; if `leaves_shared`, name who loses it and default to no. Then the same call with `dry_run: false`, and reply with `{origin}/cells/{to.slug}/{documentId}`. If it landed outside the active cluster, say so; don't switch for them.
 
-**A whole cell to another cluster** — when the work that belongs elsewhere is a cell, not a few documents (a project spinning out into its own cluster): `move_cell` keeps its documents, memory, shares and links together. Do not recreate the cell and move documents one by one.
-
-1. `list_clusters`; `list_cells` `all_clusters: true` to propose which cells belong. Confirm the set once.
-2. `move_cell` with `cell`, `cluster`, `dry_run: true` for each. `losing_access` lists people the cell is shared with who aren't in the destination — it drops out of their sidebar and search.
-3. Confirm per cell (Decision points → Move a cell to a cluster), naming those people. Suggest inviting them to the destination cluster (switch there, then `invite_member`) — ask before switching.
-4. `move_cell` with `dry_run: false`. Inbox and a cluster's hive never move; move their documents instead (above).
-
-Never delete a cell, and never move documents out of a cell to empty it — cell deletion is the human's, in the UI.
+**A whole cell** that belongs in another cluster (a project spinning out): `move_cell` keeps its documents, memory, shares and links together. Dry run each; `losing_access` names people not in the destination. Confirm per cell (Decision points → Move a cell to a cluster) and suggest inviting them there. Inbox and a hive never move: move their documents instead. Never delete a cell or empty one so it can be deleted; that is the human's, in the UI.
 
 ## Across other skills
 
-When Notion, shopping, email, research, coding, or any other loaded skill produces a **durable** decision, artifact, receipt, or account fact — even if the human never said "onecell":
+When any other skill or workflow produces a **durable** decision, artifact, receipt or account fact, even if the human never said onecell:
 
-1. Run the health check if you have not this session (re-fetch skill + `list_cells` + `recall` or `search`).
-2. `recall` / `search` the hive (and Inbox) before inventing status or duplicating a note.
-3. **Offer first** (Decision points → Capture). Write nothing without a yes.
-4. On yes: one-line durable facts → `remember` (entity slug; `cell` when it belongs on the hive). Longer artifacts, logs, or session narrative → draft in **Inbox** with `create_document` (see Park a session). Shape, destination, and publish follow Decision points.
-5. Stay on nouns: cluster · cell · hive · Inbox. Do not add a chat UI inside onecell.
+1. Health check if not done this session; `recall` / `search` before inventing status or duplicating a note.
+2. **Offer first** (Decision points → Capture). Write nothing without a yes.
+3. On yes: a one-line fact → `remember` (entity slug; `cell` if it belongs on the hive). Anything longer → an Inbox draft (Park a session).
 
 ## Park a session
 
-Human paste (Grok / Codex / Claude / Cowork):
+Human paste:
 
 > Save this session to onecell as a draft in my Capture cell (my Inbox if I have no Capture cell). Use prompt blocks for key turns, text blocks with html links for URLs, code blocks for logs or pasted artifacts, and one remember for the decision. Do not publish or put it on the hive unless I say so. Reply with the document UUID link.
 
-Agent recipe:
+Recipe:
 
-1. Destination default: **Capture**, the private cell your own drafts go to (`list_cells`: a cell you own with slug `capture`); **Inbox** if there is none. Use a named cell only if the human names it.
-2. `create_document` with `dry_run` true, then false. Title like `Session — {client} — {date}`.
-3. Blocks: short `heading` summary → `prompt` turns (truncate long bodies) → `text` (html links for URLs) → `code` for logs/pastes → more `text` for decisions. Do **not** dump raw chat logs onto the hive as truth.
-4. Stay **draft** unless the human asks to publish. Hive, shared cell, or publish → Decision points.
-5. One `remember` for the durable decision (not the transcript).
-6. Reply with `{origin}/cells/{cellSlug}/{documentId}` (UUID, not slug).
+1. Destination: **Capture**, the private cell for your own drafts (`list_cells`: one you own with slug `capture`); Inbox if none. A named cell only if the human names it.
+2. `create_document` (dry run, then real), title `Session — {client} — {date}`, tags `kind:{kind}` and `state:draft` (see Writes).
+3. Blocks: a short `heading` summary, `prompt` turns (trim long ones), `text` with html links for URLs, `code` for logs and pastes, `text` for what was decided.
+4. **Link what the conversation referred to.** People connect ideas in passing ("that's what we said about pricing"); write each callback as a link to that document. Links are how onecell learns what is load-bearing, and a session saved without them reads as unconnected.
+5. Draft unless the human says publish. One `remember` for the durable decision, not the transcript. Reply with `{origin}/cells/{cellSlug}/{documentId}`.
 
 ## Hooks
 
-If the human turned hooks on (Settings → Agents), onecell can speak without being asked:
+If the human turned hooks on (Settings → Agents):
 
-- Lines headed **onecell memory that may be relevant** were added by a hook from your prompt. Use and cite them (cell · heading); do not search for the same thing again.
-- **onecell briefing** lines open a session or follow `/clear`: unread mentions, active cluster, open decisions, recent Capture drafts. A line under **Unread mentions** reads `- {who} (via agent) in {cell} · {document}: "…"` — tell the human who needs them; `list_mentions` has the links. The briefing never marks anything read.
-- A stop that says **this turn looks like it settled something** is a suggestion. If it is worth keeping, save one short draft to the **Capture** cell (fall back to Inbox) and at most one `remember`, then stop. If not, or already saved, just stop. Never publish or share from a nudge.
-- Never call `hook_event` yourself; it is for the client's hooks.
+- **onecell memory that may be relevant** lines came from your prompt: use and cite them; don't search the same thing again.
+- **onecell briefing** opens a session or follows `/clear`: unread mentions, active cluster, open decisions, recent Capture drafts. Under **Unread mentions** a line reads `- {who} (via agent) in {cell} · {document}: "…"`; tell the human, and `list_mentions` has the links. The briefing marks nothing read.
+- **this turn looks like it settled something** is a suggestion: if worth keeping, save one short Capture draft (Inbox if none) and at most one `remember`, then stop. Never publish or share from a nudge.
+- Never call `hook_event` yourself.
 
 ## Linking documents for humans
 
-UI routes are `/cells/{cellSlug}/{documentId}` — the second segment is the document **UUID**, not its slug. A slug in that slot 404s once signed in.
-
-When you link a note to a human (chat, email, PR), always use:
-
-`{origin}/cells/{cellSlug}/{documentId}`
-
-Example: `https://onecell.io/cells/onecell-go-live/03ca4e14-fc18-4bdf-9d06-8529d538189e`
-
-Get `id` from `get_document` / `list_documents` / search hit metadata. Prefer a readable markdown label on the link. Prefer `/cells/` over the deferred `/silos/` alias. Do not invent query params.
-
-Cite agent answers as: cell · heading path · passage. The UUID link is for opening the note in the UI — not a substitute for that cite.
+Link a note as `{origin}/cells/{cellSlug}/{documentId}`: the second segment is the document **UUID**, not its slug (a slug there 404s). Example: `https://onecell.io/cells/onecell-go-live/03ca4e14-fc18-4bdf-9d06-8529d538189e`. Ids come from `get_document`, `list_documents` or search hits. Use a readable label. The same form inside a document's text is a link onecell records.
 
 ## Writes
 
-Mutating tools default `dry_run` true. Call once, read `{applied, reason}`, then again with `dry_run: false`. Human-facing choices (publish, trash, move) → Decision points.
+Every write defaults to `dry_run: true`: call once, read `{applied, reason}`, then again with `dry_run: false`. `create_document` is always a draft; publish with `set_status`.
 
-- `create_document` is always a draft. Publish with `set_status`.
-- **`draft_only_key`** means your credential is drafts only: it can read, create and edit drafts, and `remember`, but not publish, share, delete, invite, edit a published document, move a document, or accept or reject a decision. Say so and ask the human to do it (or to use a full key). Do not retry, and do not look for another way around it.
-- To change a few blocks, use `update_document` `block_ops`: `insert` (`after` / `before` a block id, or `at` `start` / `end`), `replace`, `delete` or `move` a block by its id. Applied in order, all or nothing; send only the blocks you change. Ids come from `get_document` (`outline` or `section` is enough). A replaced block keeps its id.
-- `blocks` **replaces the entire array**: for a rewrite or a big restructure only. Then `get_document` the whole document first, even if you found the part with `outline` / `section`, and send every block. Never both `blocks` and `block_ops`.
-- Pass `expected_version` either way. Removing half or more of the blocks is refused (`mass_removal`) unless acknowledged.
-- Writes answer with what changed (`changes.fields`, `changes.blockIds`) and the new `document.version`, not the document. Pass `verbose: true` only if you need the whole thing back.
-- Tags classify documents for a work queue: `create_document` `tags` (lowercase, `key:value` allowed, e.g. `ticket`, `state:todo`; 20 max). Move state with `update_document` `tags_add` / `tags_remove` and `expected_version` — no `blocks` needed. Find them with `list_documents` `tags` (all must match; `state:*` matches a prefix); every row carries its tags.
-- Ids on blocks are generated if omitted.
-- Title and summary length warnings (`title.short`, `title.long`, `summary.short`, `summary.long`) are advice and never block a publish. Aim for a title under 65 characters and a one- or two-sentence summary under 200, but do not rewrite or retry a write just to clear one.
-- Pictures and attachments: for a file on disk, `create_upload` (with `dry_run: false`) and PUT the file to the returned `upload_url` with the given `curl` command — the bytes never pass through the conversation. The link is single-use and lasts 10 minutes. `upload_asset` with `content_base64` costs about a token per 3 characters, so keep it for tiny files or clients with no shell. Either way 8 MB max, the bytes decide the type, and you put the returned `block` in the document. Pass `document_id` for the document it is going into — create the document first if needed — so the file belongs to that document's owner and keeps showing for everyone who can read it, even in a shared cell you later lose.
-- `delete_document` moves to trash (out of search immediately). `restore_document` brings it back. `list_documents` with `trash: true` lists the bin. After 30 days the reconciler hard-deletes.
-- Public pages: a document is readable at `/p/<slug>` only when it is published *and* its visibility is `public` (`update_document` `visibility`). Ask the human before making anything public; a draft-only key cannot change visibility. Published, public documents tagged `help:recipe` in onecell's own recipes cell appear on onecell.io/help.
-- Move between cells you own, in any cluster, with `update_document` `cell` — follow Move work. Nested children come along. Granted cells cannot be a destination. In the UI, "Move to…" does the same; drop a row onto another in the same cell to nest; drop it on the cell in the sidebar to un-nest.
-- Deleting a **cell** is UI-only and only for an empty one. Never try to empty a cell so it can be deleted.
-
-`validate_document` before a big write. `strict: true` is what publishing uses.
+- **`draft_only_key`**: your credential is drafts only. It can read, create and edit drafts and `remember`, but not publish, share, delete, invite, edit a published document, move one, or accept or reject a decision. Say so and ask the human; don't retry or look for a way around it.
+- **A few blocks:** `update_document` `block_ops`: `insert` (`after` / `before` a block id, or `at` `start` / `end`), `replace`, `delete`, `move`, by id, in order, all or nothing. Send only what changes; ids come from `outline` or `section`. A replaced block keeps its id.
+- **A rewrite:** `blocks` replaces the whole array. `get_document` the whole document first and send every block. Never both.
+- Pass `expected_version`. Removing half the blocks is refused (`mass_removal`) unless acknowledged. Writes answer with what changed and the new version; `verbose: true` returns the document.
+- **Link, don't just mention.** When a document builds on, answers or replaces another, link it in the text. A superseded document gets a link to its replacement as well as `state:superseded`.
+- **Tags** (lowercase, `key:value`, 20 max) are recommended conventions, never required:
+  - `kind:` how it was formed: `question`, `thought`, `idea`, `vision`, `spec`, `ticket`, `decision`, `reference`. Suggest one at capture; titles often say it (Spec:, Ticket:).
+  - `state:` how decided: `draft` → `proposed` → `accepted` → `superseded`.
+  - `work:` ticket progress: `todo`, `doing`, `done`.
+  - Change them with `tags_add` / `tags_remove` (no `blocks` needed); find them with `list_documents` `tags` (all must match; `work:*` matches a prefix).
+- Title and summary length warnings are advice and never block: aim for a title under 65 characters and a summary under 200, but don't retry just to clear one.
+- **Files:** for a file on disk, `create_upload` and PUT it to the returned `upload_url` (single use, 10 minutes); the bytes never pass through the conversation. `upload_asset` (base64) costs about a token per 3 characters: tiny files only. 8 MB per file, 1 GB of your uploads in all; the bytes decide the type. Pass `document_id` (create the document first) so the file stays visible to its readers. Put the returned `block` in the document.
+- `delete_document` trashes (out of search at once); `restore_document` brings it back; `list_documents` `trash: true` lists the bin, emptied after 30 days.
+- A document is public at `/p/<slug>` only when published and its `visibility` is `public`. Ask first; drafts-only keys cannot change it. Public published documents tagged `help:recipe` in onecell's recipes cell appear on onecell.io/help.
+- Move with `update_document` `cell`, following Move work; nested children come along, and granted cells cannot receive a move.
 
 ## Blocks
 
-Do not smuggle a diagram into a text/code block.
+Don't smuggle a diagram into a text or code block. Ids are generated if omitted.
 
 | Need | Block |
 |---|---|
 | Prose | `{type: text, html}` |
 | Title | `{type: heading, level: 1-4, text}` |
 | Diagram | `{type: mermaid, source, caption?}` |
-| Sketch | `{type: drawing, scene, caption}` — caption required to publish. Read caption; skip scene JSON. Write Excalidraw elements (rectangle, ellipse, diamond, arrow, line, text); share pages draw them until the editor makes its own snapshot. |
-| Picture | `{type: image, assetId, alt, caption?}` — `create_upload` (kind `image`) first for the `assetId`; alt required to publish; caption optional |
-| Transclusion | `{type: embed, documentId}` — unreadable targets resolve null; on public/share pages only a published *public* target in the same workspace expands |
-| Agent turn | `{type: prompt, role: user / assistant / system, body, model?}` — AI-session narrative, not Dream chrome |
-| Link card | `{type: bookmark, url, title, note?}` — http(s) URL required to publish |
-| Attachment | `{type: file, assetId, filename, note?}` — `create_upload` (kind `file`) first: PDF, text, Markdown, CSV, JSON, zip, Office; images use `image` |
+| Sketch | `{type: drawing, scene, caption}` — Excalidraw elements (rectangle, ellipse, diamond, arrow, line, text); caption required to publish. Reading one, use the caption and skip the scene JSON |
+| Picture | `{type: image, assetId, alt, caption?}` — `create_upload` (kind `image`) for the `assetId`; alt required to publish |
+| Transclusion | `{type: embed, documentId}` — unreadable targets resolve null; on public pages only a published public target in the same workspace expands |
+| Agent turn | `{type: prompt, role: user / assistant / system, body, model?}` |
+| Link card | `{type: bookmark, url, title, note?}` — http(s) URL |
+| Attachment | `{type: file, assetId, filename, note?}` — `create_upload` (kind `file`): PDF, text, Markdown, CSV, JSON, zip, Office |
 | Code | `{type: code, lang, code}` |
 | Aside | `{type: callout, variant: info / warning / danger / success / quote, html}` |
-| Grid | `{type: table, header, rows, align?}` — every row the same length; align per column: left / center / right |
+| Grid | `{type: table, header, rows, align?}` — `header: true` makes the first row the header; rows the same length |
 | How-to | `{type: steps, steps: [{name, body}]}` |
 | Break | `{type: divider}` |
-| To-do | `{type: checklist, items: [{text, checked}]}` — plain text items; read-only on share pages |
-| Chart | `{type: chart, kind: bar / line / pie, columns, rows, caption, title?, xLabel?, yLabel?, unit?, stacked?}` — columns: category then ≤8 series; rows of numbers; caption required to publish; pie ≤6 slices |
-| Video | `{type: video, provider: youtube / vimeo / loom, videoId, url, title, hash?, start?, caption?}` — paste `url`; provider and videoId must match it; the player loads only when a reader clicks |
-| Formula | `{type: math, tex, display, caption?}` — TeX rendered by KaTeX with links, images and raw HTML off; must parse to publish |
-| Collapsible | `{type: toggle, summary, html, open}` — summary is all a reader sees until opened |
-| Sequence of events | `{type: timeline, entries: [{when, title, body?, tone?: good / bad / neutral}], caption?}` — 1–100, shown in the order written; `when` is display text ("2026-09-28", "14:32 UTC", "Q3"); ISO dates must run in order. Incidents, project history, changelogs — not how-to (use steps) |
-| Headline numbers | `{type: stats, items: [{label, value, unit?, delta?, tone?: good / bad / neutral, note?}], caption?}` — 1–6 tiles; value is display text ("4.2k", "$1.3M"); tone colours the change because up is not always good. A chart is for data; this is for the few numbers that matter |
-| Interactive HTML | `{type: sandbox, title, html, description, height?}` — a calculator or small simulation, run isolated on onecellusercontent.com. Inline HTML/CSS/JS only: no network, no external scripts, images as data: URLs; ≤256 KB, ≤3 per document. description required to publish (what readers who cannot run it see). Gated per cluster: when it is off a write returns `not_rolled_out` with a `hint`; tell the person the hint, don't retry or drop the block silently. Never sandbox HTML taken from untrusted input |
-| Change | `{type: diff, lang, before, after, filename?, caption?}` — both sides whole, not a patch; the line diff is drawn for you. Use instead of pasting a diff into `code` |
-| Decision | `{type: decision, title, status: proposed / accepted / rejected / superseded, date?: YYYY-MM-DD, context, decision, consequences?}` — plain text; blank line = new paragraph. One per decision, so search finds it. Never write `decidedBy` / `decidedAt`: the server stamps whoever saves a change of status |
-| Cite memory | `{type: fact, factId}` — id from `remember` / `recall`; renders the live belief (follows supersedes). Never copy fact text into prose. Private: share pages show a placeholder. `get_document` with `resolve_facts` returns the text |
+| To-do | `{type: checklist, items: [{text, checked}]}` — plain text items |
+| Chart | `{type: chart, kind: bar / line / pie, columns, rows, caption, title?, xLabel?, yLabel?, unit?, stacked?}` — category column then ≤8 series; caption required to publish; pie ≤6 slices |
+| Video | `{type: video, provider: youtube / vimeo / loom, videoId, url, title, hash?, start?, caption?}` — loads only when a reader clicks |
+| Formula | `{type: math, tex, display, caption?}` — KaTeX; must parse to publish |
+| Collapsible | `{type: toggle, summary, html, open}` |
+| Sequence of events | `{type: timeline, entries: [{when, title, body?, tone?: good / bad / neutral}], caption?}` — 1–100 in the order written; incidents, history, changelogs (how-to is steps) |
+| Headline numbers | `{type: stats, items: [{label, value, unit?, delta?, tone?: good / bad / neutral, note?}], caption?}` — 1–6 tiles; value is display text |
+| Interactive HTML | `{type: sandbox, title, html, description, height?}` — inline HTML/CSS/JS only (no network; images as data: URLs), ≤256 KB, ≤3 per document; description required to publish. Enabled per cluster: on `not_rolled_out` tell the person the `hint`. Never sandbox untrusted HTML |
+| Change | `{type: diff, lang, before, after, filename?, caption?}` — both sides whole; the diff is drawn for you |
+| Decision | `{type: decision, title, status: proposed / accepted / rejected / superseded, date?: YYYY-MM-DD, context, decision, consequences?}` — plain text, one per decision. Never write `decidedBy` / `decidedAt` |
+| Cite memory | `{type: fact, factId}` — renders the live belief; never copy fact text into prose |
 
 ## Decisions
 
-Open questions live as `decision` blocks with status `proposed`. `list_decisions` lists them (default open; `status`, `cell`, `decided_by` filter) with a link to each block. It covers the active cluster plus Inbox unless you pass `all_clusters: true` — do that for "what is open?", so a decision in another cluster is not missed.
+Open questions live as `decision` blocks with status `proposed`. When the human asks what is open, or a session reaches a choice already written down:
 
-When the human asks what is open, or a session reaches a choice already written as a decision:
-
-1. `list_decisions` with `all_clusters: true`, then ask the human — one question per decision, the proposal first. Never decide for them.
-2. On an answer: read the decision block (`get_document` `section` or the whole), then `update_document` `block_ops` `replace` that block with its `status` changed (and `decision` / `consequences` when the answer differs from the proposal), with `expected_version`. Dry run first.
-3. The decider is recorded from your key, as via an agent. Report back: title → new status, and the link.
+1. `list_decisions` `all_clusters: true` (so another cluster's are not missed), then ask one question per decision, the proposal first. Never decide for them.
+2. On an answer: read the block (`section` or `blocks`), then `update_document` `block_ops` `replace` it with the new `status` (and `decision` / `consequences` if the answer differs), with `expected_version`. Dry run first.
+3. The server records the decider from your key. Report: title → new status, and the link.
 
 ## Memory
 
-`remember`: one sentence, `entity` slug, `cell` for hive facts. `recall` before inventing a plan. `forget` expires; history remains. Humans see the same list on the cell page. A new fact that contradicts a live one → Decision points.
+`remember`: one sentence, an `entity` slug, `cell` for hive facts; it stores at once. `recall` before inventing a plan. A new belief replacing an old one → `remember` with `supersedes` (Decision points → Contradicting fact); `forget` only when something stopped being true with no successor. History remains either way.
 
 ## Memory pointer
 
-Reload a single belief by id — never trust inlined fact text from chat or clipboard.
+A pasted pointer means: reload that belief live. Never trust inlined fact text.
 
-1. Parse the pointer: `cellId` (UUID; ≡ MCP space id — MCP `cell` accepts UUID or slug), `memoryId`, `validFrom`.
-2. Call `get_fact({ id: memoryId })`. If `not_found`, retry with `include_expired: true`.
-3. Integrity-check: compare returned `validFrom` to the pointer's `vf` / `validFrom`. Mismatch → warn; still prefer the live row.
-4. If the row has `expiredAt` / `supersededBy`, follow `supersededBy` with another `get_fact` until live (or report the chain). Facts are never updated in place — "moved" means expired + successor id.
-5. Use the live `fact` text. Do not invent from the human header.
-
-Clipboard teaching (≤4–6 line human header + compact URI last):
+1. Parse `cellId` (a cell UUID; `cell` accepts it), `memoryId`, `validFrom`.
+2. `get_fact({ id: memoryId })`; on `not_found`, retry with `include_expired: true`.
+3. If the returned `validFrom` differs from the pointer's, warn and prefer the live row. If it has `supersededBy`, follow it to the live fact.
 
 ```
 # onecell memory pointer v1
@@ -239,20 +195,9 @@ validFrom: <ISO>
 onecell://memory?v=1&cell=<uuid>&id=<n>&vf=<urlencoded ISO>
 ```
 
-Stay on nouns: cluster · cell · hive · Inbox. Never workshop / org on stranger surfaces.
-
 ## Cell pointer
 
-Reload a cell's live shape — never trust inlined document dumps from chat or clipboard. Scope: non-Inbox cells (Inbox has no cell pointer chrome).
-
-1. Parse the pointer: `cellId` (UUID), `cellSlug`, optional soft stamp `vu` (newest document `updatedAt` ISO). Cells lack bitemporal validFrom; integrity = shape may have changed.
-2. Resolve the cell via `list_cells` or MCP `cell` (UUID or slug).
-3. Scope work with `search` / `list_documents` / `recall` to that cell. Do not dump every document into the reply.
-4. If the pointer carries `vu` and live newest document `updatedAt` is newer, warn and use live.
-5. Cite as: cell · heading · passage. Link notes with UUID routes: `/cells/{slug}/{uuid}`.
-6. No dedicated MCP `get_cell` is required for v1.
-
-Clipboard teaching (≤4–6 line human header + compact URI last; omit `updatedAt` / `vu` when the cell has zero docs):
+A pasted cell pointer means: work from that cell's live state, not a pasted dump. Resolve `cellId` / `cellSlug` (`cell` accepts either), then scope `search`, `list_documents` and `recall` to it. If the pointer's `vu` (newest update) is older than the live cell's, say it has changed. Never dump every document.
 
 ```
 # onecell cell pointer v1
@@ -265,30 +210,22 @@ updatedAt: <ISO>
 onecell://cell?v=1&cell=<uuid>&slug=<slug>&vu=<urlencoded ISO>
 ```
 
-Stay on nouns: cluster · cell · hive · Inbox.
-
 ## Mentions
 
-Bring a teammate in by @mentioning them — a dependency you found on their work, a review, a decision they should weigh in on. They are told in onecell and by their agent; there is no email.
+Bring a teammate in (a dependency on their work, a review, a decision for them) by @mentioning them. They are told in onecell and by their agent.
 
-1. Who: `list_members` with `cell` — the people you can mention there, with `can_open`: `drafts` (told now), `published` (told once the document is published), `none` (not told). Mentions in Inbox tell no one.
-2. Write the mention where it belongs:
-   - In a rich-text field — text, callout, toggle, steps body or prompt body — as `<span data-mention="{workspaceId}">@{Name}</span>`.
-   - In a decision's `context`, `decision` or `consequences` (plain text) as the token `@[{Name}](ws:{workspaceId})` — e.g. who to review it, or who owns a dependency.
-   - Nowhere else: not a decision's title, checklist items, headings or tables. There the markup shows as typed, id and all, and publishing refuses it (`mention.plain_text_field`).
-3. Dry run first: the result's `mentions` says who will be told (`notify`), who later (`not_yet_visible`), and who not and why (`skipped`). The server sets the name; a mention of someone outside the cluster is removed. Ask first (Decision points → Mention).
-4. Re-saving never tells anyone twice. Mentioning them again in a new block does.
+1. `list_members` with `cell`: who you can mention there, with `can_open` — `drafts` (told now), `published` (told once published), `none` (not told). Mentions in Inbox tell no one.
+2. In rich text (text, callout, toggle, steps or prompt body): `<span data-mention="{workspaceId}">@{Name}</span>`. In a decision's `context`, `decision` or `consequences`: `@[{Name}](ws:{workspaceId})`. Nowhere else: elsewhere publishing refuses it (`mention.plain_text_field`).
+3. Dry run: `mentions` shows who is told (`notify`), who later (`not_yet_visible`) and who not (`skipped`). Ask first (Decision points → Mention). Re-saving never tells anyone twice.
 
-Your own: `list_mentions` (unread first; who, cell, document, passage, link). Pass `mark_read` (ids or `"all"`) only once the human has seen them.
+Your own: `list_mentions`, unread first. Pass `mark_read` (ids or `"all"`) only once the human has seen them.
 
 ## Team
 
-- `list_members` then `share_cell` (owner only; dry run first). Default role viewer. Check `mailed`. Inbox cannot be shared.
-- A cell can also be open to its whole cluster: `share_cell` with `cluster` (`none`, `viewer`, `editor`; owner only; dry run first). Everyone in the cluster gets that level, including people who join later, so ask the human first. `list_cells` / `list_cell_grants` show `clusterAccess`. A new member gets the hive plus every cell open to the cluster; nothing else.
-- Share, invite, or public link → Decision points first.
-- `invite_member`: they sign in with that email. `send_email: false` returns a join `url` to paste. `resend_invite` / `list_invites` for pending links.
-- Outward link: `share_document` — dry_run first, then ask the human; the token is shown **once**. Refuses Inbox (`inbox_unshareable`). `revoke_share`, `revoke_cell_grant` and `forget` also dry-run first.
+- Share a cell: `list_members`, then `share_cell` (owner only; viewer by default; check `mailed`). Or open it to the whole cluster with `share_cell` `cluster` (`none` / `viewer` / `editor`), which includes future members: ask first. `list_cell_grants` shows both. Inbox cannot be shared.
+- `invite_member`: they sign in with that email; `send_email: false` returns a join link. `resend_invite` and `list_invites` for pending ones.
+- `share_document` mints a read link: a credential, shown once. Dry run, ask the human, then mint. `revoke_share` and `revoke_cell_grant` take access back.
 
 ## Isolation
 
-A key or OAuth token is one workspace. If `search` / `get_document` returns nothing, you are not granted it — stop. Do not retry as a different user.
+A key or OAuth token is one workspace. If `search` or `get_document` returns nothing, you have no access: stop, and don't retry as someone else.
