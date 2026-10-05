@@ -155,7 +155,9 @@ Mutating tools default `dry_run` true. Call once, read `{applied, reason}`, then
 
 - `create_document` is always a draft. Publish with `set_status`.
 - **`draft_only_key`** means your credential is drafts only: it can read, create and edit drafts, and `remember`, but not publish, share, delete, invite, edit a published document, move a document, or accept or reject a decision. Say so and ask the human to do it (or to use a full key). Do not retry, and do not look for another way around it.
-- `update_document` **replaces the entire `blocks` array**. `get_document` first — the whole document, even if you found the part with `outline` / `section` — and pass `expected_version`. An update that would drop half or more of the blocks is refused (`mass_removal`) unless acknowledged.
+- To change a few blocks, use `update_document` `block_ops`: `insert` (`after` / `before` a block id, or `at` `start` / `end`), `replace`, `delete` or `move` a block by its id. Applied in order, all or nothing; send only the blocks you change. Ids come from `get_document` (`outline` or `section` is enough). A replaced block keeps its id.
+- `blocks` **replaces the entire array**: for a rewrite or a big restructure only. Then `get_document` the whole document first, even if you found the part with `outline` / `section`, and send every block. Never both `blocks` and `block_ops`.
+- Pass `expected_version` either way. Removing half or more of the blocks is refused (`mass_removal`) unless acknowledged.
 - Writes answer with what changed (`changes.fields`, `changes.blockIds`) and the new `document.version`, not the document. Pass `verbose: true` only if you need the whole thing back.
 - Tags classify documents for a work queue: `create_document` `tags` (lowercase, `key:value` allowed, e.g. `ticket`, `state:todo`; 20 max). Move state with `update_document` `tags_add` / `tags_remove` and `expected_version` — no `blocks` needed. Find them with `list_documents` `tags` (all must match; `state:*` matches a prefix); every row carries its tags.
 - Ids on blocks are generated if omitted.
@@ -207,7 +209,7 @@ Open questions live as `decision` blocks with status `proposed`. `list_decisions
 When the human asks what is open, or a session reaches a choice already written as a decision:
 
 1. `list_decisions` with `all_clusters: true`, then ask the human — one question per decision, the proposal first. Never decide for them.
-2. On an answer: `get_document`, change that block's `status` (and `decision` / `consequences` when the answer differs from the proposal), `update_document` with `expected_version`. Dry run first.
+2. On an answer: read the decision block (`get_document` `section` or the whole), then `update_document` `block_ops` `replace` that block with its `status` changed (and `decision` / `consequences` when the answer differs from the proposal), with `expected_version`. Dry run first.
 3. The decider is recorded from your key, as via an agent. Report back: title → new status, and the link.
 
 ## Memory
