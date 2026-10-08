@@ -215,7 +215,7 @@ onecell://cell?v=1&cell=<uuid>&slug=<slug>&vu=<urlencoded ISO>
 Bring a teammate in (a dependency on their work, a review, a decision for them) by @mentioning them. They are told in onecell and by their agent.
 
 1. `list_members` with `cell`: who you can mention there, with `can_open` — `drafts` (told now), `published` (told once published), `none` (not told). Mentions in Inbox tell no one.
-2. In rich text (text, callout, toggle, steps or prompt body): `<span data-mention="{workspaceId}">@{Name}</span>`. In a decision's `context`, `decision` or `consequences`: `@[{Name}](ws:{workspaceId})`. Nowhere else: elsewhere publishing refuses it (`mention.plain_text_field`).
+2. In rich text (text, callout, toggle, steps or prompt body): `<span data-mention="{workspaceId}">@{Name}</span>`. In a decision's `context`, `decision` or `consequences`: `@[{Name}](ws:{workspaceId})` — exactly that, `@` included. A span, or the token without its `@`, is converted and still notifies (`mentions.converted` says so; use the exact form next time). This is how to ask someone for an approval: they get Accept / Reject on their Mentions page. Nowhere else: elsewhere publishing refuses it (`mention.plain_text_field`).
 3. Dry run: `mentions` shows who is told (`notify`), who later (`not_yet_visible`) and who not (`skipped`). Ask first (Decision points → Mention). Re-saving never tells anyone twice.
 
 Your own: `list_mentions`, unread first. Pass `mark_read` (ids or `"all"`) only once the human has seen them.
