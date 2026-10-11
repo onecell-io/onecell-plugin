@@ -72,8 +72,8 @@ Where work lives decides who sees it, so moving is the human's call. Never pick 
 
 1. **Which.** Use the document the human named; otherwise `search` and offer up to three. Several → confirm the set once.
 2. **Where.** `list_cells` `all_clusters: true`; offer two or three cells you own (`owned: true`), grouped by cluster, active first, plus Inbox. Nothing fits → ask about a new cell; never invent one.
-3. **Dry run** `update_document` with `id` and `cell`. Read `move`: `children` come along, `to.cluster` is where it lands, `leaves_shared` means people who see the current cell lose it.
-4. **Confirm** in one line; if `leaves_shared`, name who loses it and default to no. Then the same call with `dry_run: false`, and reply with `{origin}/cells/{to.slug}/{documentId}`. If it landed outside the active cluster, say so; don't switch for them.
+3. **Dry run** `update_document` with `id` and `cell`. Read `move`: `children` come along, `to.cluster` is where it lands, `leaves_shared` means the current cell is shared, and `losing_access` names who would lose it.
+4. **Confirm** in one line; if `losing_access` names anyone, list them and default to no. Offer `carry_access: true` for those with `can_carry` (they get the whole destination cell); never on your own. Then the same call with `dry_run: false`, and reply with `{origin}/cells/{to.slug}/{documentId}`. If it landed outside the active cluster, say so; don't switch for them.
 
 **A whole cell** that belongs in another cluster (a project spinning out): `move_cell` keeps its documents, memory, shares and links together. Dry run each; `losing_access` names people not in the destination. Confirm per cell (Decision points → Move a cell to a cluster) and suggest inviting them there. Inbox and a hive never move: move their documents instead. Never delete a cell or empty one so it can be deleted; that is the human's, in the UI.
 

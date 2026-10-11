@@ -42,11 +42,22 @@ client="codex"; [ -n "$CLAUDE_PLUGIN_OPTION_API_KEY" ] && client="claude-code"
 umask 077
 body_file=$(mktemp "${TMPDIR:-/tmp}/onecell-hook.XXXXXX") || exit 0
 trap 'rm -f "$body_file"' EXIT
-printf '%s' "$input" | jq -c --arg event "$event" --arg session "$session" --arg client "$client" '{
+# The reply that just finished. Claude Code and Codex send it as last_assistant_message;
+# an older Claude Code may not, so read the last assistant text from the transcript's end.
+last=""
+if [ "$event" = stop ] && [ -z "$(printf '%s' "$input" | jq -r '.last_assistant_message // empty')" ]; then
+  transcript=$(printf '%s' "$input" | jq -r '.transcript_path // empty')
+  [ -n "$transcript" ] && [ -r "$transcript" ] && last=$(tail -n 200 "$transcript" | jq -rs '
+    [.[] | select(.type == "assistant") | .message.content
+      | if type == "array" then map(select(.type == "text") | .text) | join("\n") else . end
+      | select(type == "string" and length > 0)] | last // empty' 2>/dev/null)
+fi
+
+printf '%s' "$input" | jq -c --arg event "$event" --arg session "$session" --arg client "$client" --arg last "$last" '{
   jsonrpc: "2.0", id: 1, method: "tools/call",
   params: {name: "hook_event", arguments: ({
     event: $event, session_id: $session, client: $client,
-    prompt: (.prompt // null), last_message: (.last_assistant_message // null), source: (.source // null)
+    prompt: (.prompt // null), last_message: (.last_assistant_message // (if $last == "" then null else $last end)), source: (.source // null)
   } | with_entries(select(.value != null)))}
 }' > "$body_file" 2>/dev/null || exit 0
 
