@@ -14,11 +14,11 @@ description: >
 
 A workspace is one person. Inbox is private. The hive is a cell teammates share with you. You see your own cells plus what is shared with you, never anyone else's Inbox.
 
-Connect at `{origin}/api/mcp` (OAuth) or Bearer `ic_…`. First install: fetch `{origin}/agent-setup/prompt.md` and run this client's section (Codex: `codex mcp add` + `codex mcp login`, see `{origin}/agent-setup/codex`; Cowork: Claude.ai Connectors custom URL; Grok: add the MCP URL in chat). This skill lives at `{origin}/skills/onecell.md`.
+Connect at `https://onecell.io/api/mcp` (OAuth) or Bearer `ic_…`. First install: fetch `https://onecell.io/agent-setup/prompt.md` and run this client's section (Codex: `codex mcp add` + `codex mcp login`, see `https://onecell.io/agent-setup/codex`; Cowork: Claude.ai Connectors custom URL; Grok: add the MCP URL in chat). This skill lives at `https://onecell.io/skills/onecell.md`.
 
 ## Keep this skill fresh
 
-Saved copies drift. Once per agent session, after MCP connects and before real hive work: re-fetch `{origin}/skills/onecell.md` (and `{origin}/skills/onecell-bridge.md` if this client keeps it) and overwrite the local copies. If the live skill names tools you do not have, re-run agent-setup: a skill file alone is not a working install.
+Saved copies drift. Once per agent session, after MCP connects and before real hive work: re-fetch `https://onecell.io/skills/onecell.md` (and `https://onecell.io/skills/onecell-bridge.md` if this client keeps it) and overwrite the local copies. If the live skill names tools you do not have, re-run agent-setup: a skill file alone is not a working install.
 
 ## Health check
 
@@ -31,7 +31,7 @@ Saved copies drift. Once per agent session, after MCP connects and before real h
 
 One login can belong to several clusters. Inbox is one private cell shown in every cluster; every other cell, hive included, belongs to one cluster. `list_cells`, `search`, `recall` and `list_documents` cover the **active** cluster plus Inbox; naming a cell by slug or id works in any cluster.
 
-- The active cluster is one preference shared with the human's sidebar. To look around, use `list_cells` `all_clusters: true`; to work elsewhere, name the `cell`. Switch (`set_active_cluster`) only when the human asks or for member and invite work there (Decision points → Switch cluster).
+- Your active cluster is this connection's own: it follows the human's until you pick one, and switching never moves their sidebar or other agents. To look around, use `list_cells` `all_clusters: true`; to work elsewhere, name the `cell` as `cluster/slug` (`onecell-io/backlog`), or by id. On `ambiguous_cell`, pass a match's `ref`. Switch (`set_active_cluster`) for a run of work there, or for member and invite work (Decision points → Switch cluster).
 - New cells land in the active cluster. Invites, `list_invites`, `list_members` and `share_cell` follow the active cluster; its owner invites.
 - `create_cluster` makes the new cluster active, switching the human's sidebar (Decision points → Create a cluster). `join_cluster` accepts a pending invite for this email.
 
@@ -60,8 +60,8 @@ Some choices belong to the human. Ask in one line and name the default; skip wha
 | Invite | "Email the invite, or give you a join link to paste?" | Email |
 | Trash | "Trash {title}? Restorable for 30 days." | Don't |
 | Move | "Move {title} (+{n} nested) from {cell} to {cell} in {cluster}?" See Move work. | Don't |
-| Create a cluster | "Create cluster {name}? It becomes your active cluster, so your sidebar switches to it." | Don't |
-| Switch cluster | "Switch to {cluster}? Your sidebar switches too." | Don't. Name cells with `cell`, or find them with `list_cells` `all_clusters`. |
+| Create a cluster | "Create cluster {name}? You will own it; your sidebar stays where it is." | Don't |
+| Switch cluster | No need to ask: it is this connection's only. Say which cluster you are in. | Prefer naming cells `cluster/slug` for one-off reads and writes. |
 | Move a cell to a cluster | "Move {cell} ({n} docs) to {cluster}? {people} aren't in {cluster}, so it leaves their sidebar and search." | Don't |
 | Move out of a shared cell | "{from} is shared — the people there lose {title}. Move anyway?" | Don't |
 | Mention | "Mention {name}? They're told in onecell and by their agent." | Don't — only someone the human named or asked to bring in |
@@ -73,7 +73,7 @@ Where work lives decides who sees it, so moving is the human's call. Never pick 
 1. **Which.** Use the document the human named; otherwise `search` and offer up to three. Several → confirm the set once.
 2. **Where.** `list_cells` `all_clusters: true`; offer two or three cells you own (`owned: true`), grouped by cluster, active first, plus Inbox. Nothing fits → ask about a new cell; never invent one.
 3. **Dry run** `update_document` with `id` and `cell`. Read `move`: `children` come along, `to.cluster` is where it lands, `leaves_shared` means the current cell is shared, and `losing_access` names who would lose it.
-4. **Confirm** in one line; if `losing_access` names anyone, list them and default to no. Offer `carry_access: true` for those with `can_carry` (they get the whole destination cell); never on your own. Then the same call with `dry_run: false`, and reply with `{origin}/cells/{to.slug}/{documentId}`. If it landed outside the active cluster, say so; don't switch for them.
+4. **Confirm** in one line; if `losing_access` names anyone, list them and default to no. Offer `carry_access: true` for those with `can_carry` (they get the whole destination cell); never on your own. Then the same call with `dry_run: false`, and reply with `https://onecell.io/cells/{to.slug}/{documentId}`. If it landed outside the active cluster, say so; don't switch for them.
 
 **A whole cell** that belongs in another cluster (a project spinning out): `move_cell` keeps its documents, memory, shares and links together. Dry run each; `losing_access` names people not in the destination. Confirm per cell (Decision points → Move a cell to a cluster) and suggest inviting them there. Inbox and a hive never move: move their documents instead. Never delete a cell or empty one so it can be deleted; that is the human's, in the UI.
 
@@ -97,7 +97,7 @@ Recipe:
 2. `create_document` (dry run, then real), title `Session — {client} — {date}`, tags `kind:{kind}` and `state:draft` (see Writes).
 3. Blocks: a short `heading` summary, `prompt` turns (trim long ones), `text` with html links for URLs, `code` for logs and pastes, `text` for what was decided.
 4. **Link what the conversation referred to.** People connect ideas in passing ("that's what we said about pricing"); write each callback as a link to that document. Links are how onecell learns what is load-bearing, and a session saved without them reads as unconnected.
-5. Draft unless the human says publish. One `remember` for the durable decision, not the transcript. Reply with `{origin}/cells/{cellSlug}/{documentId}`.
+5. Draft unless the human says publish. One `remember` for the durable decision, not the transcript. Reply with `https://onecell.io/cells/{cellSlug}/{documentId}`.
 
 ## Hooks
 
@@ -110,7 +110,7 @@ If the human turned hooks on (Settings → Agents):
 
 ## Linking documents for humans
 
-Link a note as `{origin}/cells/{cellSlug}/{documentId}`: the second segment is the document **UUID**, not its slug (a slug there 404s). Example: `https://onecell.io/cells/onecell-go-live/03ca4e14-fc18-4bdf-9d06-8529d538189e`. Ids come from `get_document`, `list_documents` or search hits. Use a readable label. The same form inside a document's text is a link onecell records.
+Link a note as `https://onecell.io/cells/{cellSlug}/{documentId}`: the second segment is the document **UUID**, not its slug (a slug there 404s). Example: `https://onecell.io/cells/onecell-go-live/03ca4e14-fc18-4bdf-9d06-8529d538189e`. Ids come from `get_document`, `list_documents` or search hits. Use a readable label. The same form inside a document's text is a link onecell records.
 
 ## Writes
 

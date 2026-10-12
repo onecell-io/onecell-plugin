@@ -11,12 +11,18 @@
 #
 # Needs: curl (7.55 or later), jq, and a key (an ic_… key from https://onecell.io/settings/agents; Drafts only is
 # enough): CLAUDE_PLUGIN_OPTION_API_KEY, which Claude Code sets from the plugin's stored
-# setting, or ONECELL_API_KEY. Never blocks a session: any failure prints nothing, exits 0.
+# setting, or ONECELL_API_KEY, or the file `npx onecell hooks` writes
+# (~/.config/onecell/hooks-key, readable only by you). Never blocks a session: any failure
+# prints nothing, exits 0.
 
 # Filled in when served from https://onecell.io/agent-setup/hook.sh; ONECELL_URL overrides it.
 ONECELL_DEFAULT_URL='https://onecell.io'
 ONECELL_URL="${ONECELL_URL:-$ONECELL_DEFAULT_URL}"
 ONECELL_API_KEY="${ONECELL_API_KEY:-$CLAUDE_PLUGIN_OPTION_API_KEY}"
+ONECELL_KEY_FILE="${XDG_CONFIG_HOME:-$HOME/.config}/onecell/hooks-key"
+if [ -z "$ONECELL_API_KEY" ] && [ -r "$ONECELL_KEY_FILE" ]; then
+  ONECELL_API_KEY=$(head -n 1 "$ONECELL_KEY_FILE" | tr -d '[:space:]')
+fi
 [ -n "$ONECELL_API_KEY" ] || exit 0
 command -v jq >/dev/null 2>&1 || exit 0
 

@@ -10,11 +10,11 @@ description: >
 
 # onecell-bridge
 
-Companion to `{origin}/skills/onecell.md`. Keep both skills saved. Nouns: cluster · cell · hive · Inbox. No chat UI inside onecell.
+Companion to `https://onecell.io/skills/onecell.md`. Keep both skills saved. Nouns: cluster · cell · hive · Inbox. No chat UI inside onecell.
 
 ## Once per session
 
-1. Re-fetch `{origin}/skills/onecell.md` and this file; overwrite `skills/onecell/SKILL.md` and `skills/onecell-bridge/SKILL.md`.
+1. Re-fetch `https://onecell.io/skills/onecell.md` and this file; overwrite `skills/onecell/SKILL.md` and `skills/onecell-bridge/SKILL.md`.
 2. Confirm MCP tools include `list_cells`, `search`, `recall`, `remember`, `create_document`.
 3. Call `list_cells`, then `recall` or `search`. Skill save alone is not healthy.
 
@@ -23,5 +23,5 @@ Companion to `{origin}/skills/onecell.md`. Keep both skills saved. Nouns: cluste
 1. `recall` / `search` before inventing status.
 2. **Offer first**: "Save {one-line summary} to your Inbox?" Write nothing without a yes.
 3. On yes: one-line facts → `remember`. Longer artifacts / logs / session narrative → Inbox draft via `create_document` (prompt blocks for key turns, text html for links, code for logs).
-4. Destination, publish, sharing, and conflicting facts: follow Decision points in `{origin}/skills/onecell.md`.
-5. Full contract: follow `{origin}/skills/onecell.md` (Park a session, Writes, Blocks).
+4. Destination, publish, sharing, and conflicting facts: follow Decision points in `https://onecell.io/skills/onecell.md`.
+5. Full contract: follow `https://onecell.io/skills/onecell.md` (Park a session, Writes, Blocks).
