@@ -159,7 +159,7 @@ Don't smuggle a diagram into a text or code block. Ids are generated if omitted.
 | Collapsible | `{type: toggle, summary, html, open}` |
 | Sequence of events | `{type: timeline, entries: [{when, title, body?, tone?: good / bad / neutral}], caption?}` — 1–100 in the order written; incidents, history, changelogs (how-to is steps) |
 | Headline numbers | `{type: stats, items: [{label, value, unit?, delta?, tone?: good / bad / neutral, note?}], caption?}` — 1–6 tiles; value is display text |
-| Interactive HTML | `{type: sandbox, title, html, description, height?}` — inline HTML/CSS/JS only (no network; images as data: URLs), ≤256 KB, ≤3 per document; description required to publish. Enabled per cluster: on `not_rolled_out` tell the person the `hint`. Never sandbox untrusted HTML |
+| Interactive HTML | `{type: sandbox, title, html, description, height?}` — inline HTML/CSS/JS only (no network; images as data: URLs), ≤256 KB, ≤3 per document; description required to publish. Enabled per cluster: on `not_rolled_out` tell the person the `hint`. Never sandbox untrusted HTML. Before your first, fetch one worked example: `https://onecell.io/skills/onecell/examples/sandbox-tool.html` (a form tool) or `sandbox-simulation.html` (a canvas animation); both follow the reader's theme via `data-onecell-theme` |
 | Change | `{type: diff, lang, before, after, filename?, caption?}` — both sides whole; the diff is drawn for you |
 | Decision | `{type: decision, title, status: proposed / accepted / rejected / superseded, date?: YYYY-MM-DD, context, decision, consequences?}` — plain text, one per decision. Never write `decidedBy` / `decidedAt` |
 | Cite memory | `{type: fact, factId}` — renders the live belief; never copy fact text into prose |
