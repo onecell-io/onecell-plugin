@@ -43,6 +43,8 @@ One login can belong to several clusters. Inbox is one private cell shown in eve
 
 Cite as: cell · heading path · passage. Never paste a whole document into the reply.
 
+Archived documents are history (superseded pricing, a retired process): `search` leaves them out. Pass `include_archived: true` only when the human asks what used to be true; those hits carry `archived: true`. Never cite one as current; say "(archived)" when you mention it.
+
 ## Decision points
 
 Some choices belong to the human. Ask in one line and name the default; skip what they already answered. If this client cannot ask, take the default: it is always the least exposed choice. `dry_run` checks the call; this table checks the person. Do both.
