@@ -136,35 +136,21 @@ Every write defaults to `dry_run: true`: call once, read `{applied, reason}`, th
 
 ## Blocks
 
-Don't smuggle a diagram into a text or code block. Ids are generated if omitted.
+Don't smuggle a diagram into a text or code block. Ids are generated if omitted. The everyday blocks:
 
 | Need | Block |
 |---|---|
 | Prose | `{type: text, html}` |
 | Title | `{type: heading, level: 1-4, text}` |
 | Diagram | `{type: mermaid, source, caption?}` |
-| Sketch | `{type: drawing, scene, caption}` — Excalidraw elements (rectangle, ellipse, diamond, arrow, line, text); caption required to publish. Reading one, use the caption and skip the scene JSON |
-| Picture | `{type: image, assetId, alt, caption?}` — `create_upload` (kind `image`) for the `assetId`; alt required to publish |
-| Transclusion | `{type: embed, documentId}` — unreadable targets resolve null; on public pages only a published public target in the same workspace expands |
-| Agent turn | `{type: prompt, role: user / assistant / system, body, model?}` |
-| Link card | `{type: bookmark, url, title, note?}` — http(s) URL |
-| Attachment | `{type: file, assetId, filename, note?}` — `create_upload` (kind `file`): PDF, text, Markdown, CSV, JSON, zip, Office |
 | Code | `{type: code, lang, code}` |
 | Aside | `{type: callout, variant: info / warning / danger / success / quote, html}` |
-| Grid | `{type: table, header, rows, align?}` — `header: true` makes the first row the header; rows the same length |
-| How-to | `{type: steps, steps: [{name, body}]}` |
-| Break | `{type: divider}` |
 | To-do | `{type: checklist, items: [{text, checked}]}` — plain text items |
-| Chart | `{type: chart, kind: bar / line / pie, columns, rows, caption, title?, xLabel?, yLabel?, unit?, stacked?}` — category column then ≤8 series; caption required to publish; pie ≤6 slices |
-| Video | `{type: video, provider: youtube / vimeo / loom, videoId, url, title, hash?, start?, caption?}` — loads only when a reader clicks |
-| Formula | `{type: math, tex, display, caption?}` — KaTeX; must parse to publish |
-| Collapsible | `{type: toggle, summary, html, open}` |
-| Sequence of events | `{type: timeline, entries: [{when, title, body?, tone?: good / bad / neutral}], caption?}` — 1–100 in the order written; incidents, history, changelogs (how-to is steps) |
-| Headline numbers | `{type: stats, items: [{label, value, unit?, delta?, tone?: good / bad / neutral, note?}], caption?}` — 1–6 tiles; value is display text |
-| Interactive HTML | `{type: sandbox, title, html, description, height?}` — inline HTML/CSS/JS only (no network; images as data: URLs), ≤256 KB, ≤3 per document; description required to publish. Enabled per cluster: on `not_rolled_out` tell the person the `hint`. Never sandbox untrusted HTML. Before your first, fetch one worked example: `https://onecell.io/skills/onecell/examples/sandbox-tool.html` (a form tool) or `sandbox-simulation.html` (a canvas animation); both follow the reader's theme via `data-onecell-theme` |
-| Change | `{type: diff, lang, before, after, filename?, caption?}` — both sides whole; the diff is drawn for you |
+| Agent turn | `{type: prompt, role: user / assistant / system, body, model?}` |
 | Decision | `{type: decision, title, status: proposed / accepted / rejected / superseded, date?: YYYY-MM-DD, context, decision, consequences?}` — plain text, one per decision. Never write `decidedBy` / `decidedAt` |
 | Cite memory | `{type: fact, factId}` — renders the live belief; never copy fact text into prose |
+
+Any other block (image, file, table, chart, drawing, embed, bookmark, steps, toggle, timeline, stats, video, math, diff, divider, sandbox): fetch `https://onecell.io/skills/onecell/reference/blocks.md` first, once per session. It has every type's fields and what each needs to publish.
 
 ## Decisions
 
