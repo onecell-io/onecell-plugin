@@ -59,7 +59,7 @@ Some choices belong to the human. Ask in one line and name the default; skip wha
 | Contradicting fact | "Replace '{old}' with '{new}'?" (`remember` with `supersedes`) | Keep the old fact. Report the conflict. |
 | Share a cell | "Share {cell} with {who} as viewer or editor?" | Viewer |
 | Public link | "Create a public link? Anyone with it can read {title}." | No link |
-| Invite | "Email the invite, or give you a join link to paste?" | Email |
+| Invite | "Email {who} an invitation to {cluster}?" The link goes only to their inbox. | Don't |
 | Trash | "Trash {title}? Restorable for 30 days." | Don't |
 | Move | "Move {title} (+{n} nested) from {cell} to {cell} in {cluster}?" See Move work. | Don't |
 | Create a cluster | "Create cluster {name}? You will own it; your sidebar stays where it is." | Don't |
@@ -210,7 +210,7 @@ Your own: `list_mentions`, unread first. Pass `mark_read` (ids or `"all"`) only 
 ## Team
 
 - Share a cell: `list_members`, then `share_cell` (owner only; viewer by default; check `mailed`). Or open it to the whole cluster with `share_cell` `cluster` (`none` / `viewer` / `editor`), which includes future members: ask first. `list_cell_grants` shows both. Inbox cannot be shared.
-- `invite_member`: they sign in with that email; `send_email: false` returns a join link. `resend_invite` and `list_invites` for pending ones.
+- `invite_member`: emails the invitation; they join with that address. The join link goes only to their inbox and is never returned to you. `resend_invite` mails a new link (the old one stops working); `list_invites` shows pending ones.
 - `share_document` mints a read link: a credential, shown once. Dry run, ask the human, then mint. `revoke_share` and `revoke_cell_grant` take access back.
 
 ## Isolation
