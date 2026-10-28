@@ -16,6 +16,14 @@ A workspace is one person. Inbox is private. The hive is a cell teammates share 
 
 Connect at `https://onecell.io/api/mcp` (OAuth) or Bearer `ic_…`. First install: fetch `https://onecell.io/agent-setup/prompt.md` and run this client's section (Codex: `codex mcp add` + `codex mcp login`, see `https://onecell.io/agent-setup/codex`; Cowork: Claude.ai Connectors custom URL; Grok: add the MCP URL in chat). This skill lives at `https://onecell.io/skills/onecell.md`.
 
+## Commands
+
+When this skill runs as a command, its argument says what to do:
+
+- `/onecell save`: Park a session, below.
+- `/onecell resume [words]`: Resume a session, below. The words narrow the list.
+- `/onecell` alone: the health check, then unread mentions and what is open.
+
 ## Keep this skill fresh
 
 Saved copies drift. Once per agent session, after MCP connects and before real hive work: re-fetch `https://onecell.io/skills/onecell.md` (and `https://onecell.io/skills/onecell-bridge.md` if this client keeps it) and overwrite the local copies. If the live skill names tools you do not have, re-run agent-setup: a skill file alone is not a working install.
@@ -96,10 +104,28 @@ Human paste:
 Recipe:
 
 1. Destination: **Capture**, the private cell for your own drafts (`list_cells`: one you own with slug `capture`); Inbox if none. A named cell only if the human names it.
-2. `create_document` (dry run, then real), title `Session — {client} — {date}`, tags `kind:{kind}` and `state:draft` (see Writes).
-3. Blocks: a short `heading` summary, `prompt` turns (trim long ones), `text` with html links for URLs, `code` for logs and pastes, `text` for what was decided.
+2. `create_document` (dry run, then real), title `Session — {client} — {date} ({topic})`, tags `kind:session`, `state:draft`, and in a git repo `repo:{name}` (the origin remote's repo name, lowercase); keep any `project:` or `area:` tag that fits.
+3. Blocks, in this order:
+   - a `text` **Where** line: client, repo, branch, head commit (short), and whether the tree was clean. Never a home-directory path.
+   - a `heading` **Summary** and a short `text` with html links to the pages the session touched;
+   - `prompt` blocks for the key turns (trim long ones); `code` for logs and pastes;
+   - a `heading` **Decided** and a `text` list;
+   - a `heading` **Open** and a `checklist` of what is next. Resume reads **Decided** and **Open** by those names.
+   - If this session was resumed from a save, link that save in the Summary.
 4. **Link what the conversation referred to.** People connect ideas in passing ("that's what we said about pricing"); write each callback as a link to that document. Links are how onecell learns what is load-bearing, and a session saved without them reads as unconnected.
 5. Draft unless the human says publish. One `remember` for the durable decision, not the transcript. Reply with `https://onecell.io/cells/{cellSlug}/{documentId}`.
+
+## Resume a session
+
+`/onecell resume [words]` picks up a session saved with `/onecell save`.
+
+1. **List.** In a git repo, `list_documents` `tags: ['kind:session', 'repo:{name}']`, then `tags: ['kind:session']` for the rest; newest first, at most 10, this repo's first. Words narrow by title and summary. No saves: say so, and that `/onecell save` makes one.
+2. **Pick.** Offer each as "{topic} · {date} · {client} · {repo} @ {branch}" with its summary. In Claude Code, a question with up to four options (Other for more); elsewhere a numbered list. Wait for the choice.
+3. **Read** it (`get_document`), and say in a few lines what was going on, what was decided, and what is open (unchecked **Open** items, proposed decisions). Then wait.
+4. **Compare the repo** with the **Where** line: current branch, `git log --oneline {head}..HEAD`, `git status --short`. Say what changed since the save. Never check out, reset or stash on your own.
+5. **Mark it**: `update_document` `block_ops` insert at `start` a `callout` "Resumed {date} in {client}" (dry run, then real). The next `/onecell save` links back to this save.
+
+Older saves titled "Session — …" without `kind:session` do not list. Offer once to tag them: `search` the title, then `tags_add` `kind:session` (and `repo:` where the page names one), dry run first, after a yes.
 
 ## Hooks
 
@@ -123,7 +149,7 @@ Every write defaults to `dry_run: true`: call once, read `{applied, reason}`, th
 - Pass `expected_version`. Removing half the blocks is refused (`mass_removal`) unless acknowledged. Writes answer with what changed and the new version; `verbose: true` returns the document.
 - **Link, don't just mention.** When a document builds on, answers or replaces another, link it in the text. A superseded document gets a link to its replacement as well as `state:superseded`.
 - **Tags** (lowercase, `key:value`, 20 max) are recommended conventions, never required:
-  - `kind:` how it was formed: `question`, `thought`, `idea`, `vision`, `spec`, `ticket`, `decision`, `reference`. Suggest one at capture; titles often say it (Spec:, Ticket:).
+  - `kind:` how it was formed: `question`, `thought`, `idea`, `vision`, `spec`, `ticket`, `decision`, `reference`, `session` (a parked agent session). Suggest one at capture; titles often say it (Spec:, Ticket:).
   - `state:` how decided: `draft` → `proposed` → `accepted` → `superseded`.
   - `work:` ticket progress: `todo`, `doing`, `done`.
   - Change them with `tags_add` / `tags_remove` (no `blocks` needed); find them with `list_documents` `tags` (all must match; `work:*` matches a prefix).
