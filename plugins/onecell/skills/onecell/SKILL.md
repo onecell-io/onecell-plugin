@@ -149,7 +149,7 @@ Don't smuggle a diagram into a text or code block. Ids are generated if omitted.
 | Decision | `{type: decision, title, status: proposed / accepted / rejected / superseded, date?: YYYY-MM-DD, context, decision, consequences?}` — plain text, one per decision. Never write `decidedBy` / `decidedAt` |
 | Cite memory | `{type: fact, factId}` — renders the live belief; never copy fact text into prose |
 
-Any other block (image, file, table, chart, drawing, embed, bookmark, steps, toggle, timeline, stats, video, math, diff, divider, sandbox): fetch `https://onecell.io/skills/onecell/reference/blocks.md` first, once per session. It has every type's fields and what each needs to publish.
+Any other block (image, file, table, chart, drawing, embed, bookmark, steps, toggle, timeline, stats, video, math, diff, divider, sandbox, collection): fetch `https://onecell.io/skills/onecell/reference/blocks.md` first, once per session. It has every type's fields and what each needs to publish.
 
 ## Decisions
 
