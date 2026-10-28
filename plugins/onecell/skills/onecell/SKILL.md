@@ -21,7 +21,7 @@ Connect at `https://onecell.io/api/mcp` (OAuth) or Bearer `ic_…`. First instal
 When this skill runs as a command, its argument says what to do:
 
 - `/onecell save`: Park a session, below.
-- `/onecell resume [words]`: Resume a session, below. The words narrow the list.
+- `/onecell resume [words | link]`: Resume a session, below. Words narrow the list; a page link or id resumes that page.
 - `/onecell` alone: the health check, then unread mentions and what is open.
 
 ## Keep this skill fresh
@@ -117,7 +117,7 @@ Recipe:
 
 ## Resume a session
 
-`/onecell resume [words]` picks up a session saved with `/onecell save`.
+`/onecell resume [words]` picks up a session saved with `/onecell save`. Given a page link or id (Copy resume prompt on onecell's Sessions page), skip to step 3 with that page.
 
 1. **List.** In a git repo, `list_documents` `tags: ['kind:session', 'repo:{name}']`, then `tags: ['kind:session']` for the rest; newest first, at most 10, this repo's first. Words narrow by title and summary. No saves: say so, and that `/onecell save` makes one.
 2. **Pick.** Offer each as "{topic} · {date} · {client} · {repo} @ {branch}" with its summary. In Claude Code, a question with up to four options (Other for more); elsewhere a numbered list. Wait for the choice.
