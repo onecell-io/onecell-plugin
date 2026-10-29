@@ -59,11 +59,20 @@ if [ "$event" = stop ] && [ -z "$(printf '%s' "$input" | jq -r '.last_assistant_
       | select(type == "string" and length > 0)] | last // empty' 2>/dev/null)
 fi
 
-printf '%s' "$input" | jq -c --arg event "$event" --arg session "$session" --arg client "$client" --arg last "$last" '{
+# The repo this session works in, by its git remote's name (as /onecell save tags it), so
+# the briefing can offer a session parked here. Only the name is sent, never the path.
+repo=""
+if [ "$event" != stop ] && command -v git >/dev/null 2>&1; then
+  cwd=$(printf '%s' "$input" | jq -r '.cwd // empty')
+  [ -n "$cwd" ] && repo=$(git -C "$cwd" remote get-url origin 2>/dev/null | sed -e 's#\.git$##' -e 's#.*[/:]##' | tr '[:upper:]' '[:lower:]' | tr -cd 'a-z0-9._-')
+fi
+
+printf '%s' "$input" | jq -c --arg event "$event" --arg session "$session" --arg client "$client" --arg last "$last" --arg repo "$repo" '{
   jsonrpc: "2.0", id: 1, method: "tools/call",
   params: {name: "hook_event", arguments: ({
     event: $event, session_id: $session, client: $client,
-    prompt: (.prompt // null), last_message: (.last_assistant_message // (if $last == "" then null else $last end)), source: (.source // null)
+    prompt: (.prompt // null), last_message: (.last_assistant_message // (if $last == "" then null else $last end)), source: (.source // null),
+    repo: (if $repo == "" then null else $repo end)
   } | with_entries(select(.value != null)))}
 }' > "$body_file" 2>/dev/null || exit 0
 

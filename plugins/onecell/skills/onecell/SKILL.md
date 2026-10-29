@@ -132,7 +132,7 @@ Older saves titled "Session — …" without `kind:session` do not list. Offer o
 If the human turned hooks on (Settings → Agents):
 
 - **onecell memory that may be relevant** lines came from your prompt: use and cite them; don't search the same thing again.
-- **onecell briefing** opens a session or follows `/clear`: unread mentions, active cluster, open decisions, recent Capture drafts. Under **Unread mentions** a line reads `- {who} (via agent) in {cell} · {document}: "…"`; tell the human, and `list_mentions` has the links. The briefing marks nothing read.
+- **onecell briefing** opens a session or follows `/clear`: unread mentions, a session parked in this repo in the last 3 days, active cluster, open decisions, recent Capture drafts. A **Parked in {repo}** line: offer once to resume it (`/onecell resume {id}`); never resume unasked. Under **Unread mentions** a line reads `- {who} (via agent) in {cell} · {document}: "…"`; tell the human, and `list_mentions` has the links. The briefing marks nothing read.
 - **this turn looks like it settled something** is a suggestion: if worth keeping, save one short Capture draft (Inbox if none) and at most one `remember`, then stop. Never publish or share from a nudge.
 
 ## Linking documents for humans
