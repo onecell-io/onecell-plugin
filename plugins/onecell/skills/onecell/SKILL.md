@@ -20,6 +20,7 @@ Connect at `https://onecell.io/api/mcp` (OAuth) or Bearer `ic_…`. First instal
 
 When this skill runs as a command, its argument says what to do:
 
+- `/onecell start`: Get started, below. A short interview that sets how agents work with this person; run it again any time to change an answer.
 - `/onecell save`: Park a session, below.
 - `/onecell resume [words | link]`: Resume a session, below. Words narrow the list; a page link or id resumes that page.
 - `/onecell` alone: the health check, then unread mentions and what is open.
@@ -45,6 +46,7 @@ One login can belong to several clusters. Inbox is one private cell shown in eve
 
 ## First moves
 
+0. `recall` with `entity: "me"`: the person's preferences from Get started (where drafts go, publishing, sessions, mentions, style). Follow them over this skill's defaults; where one is missing, use the default. Nothing saved yet? Mention `/onecell start` once, then carry on.
 1. `list_cells`: note `owned`, slug, `embedding_policy` (`none` is never searchable; `local_only` needs a local embedder). `create_cell` opens one in your workspace, shared with no one until `share_cell`.
 2. `search` the question (optional `cell`). Hits come grouped by document with short passages and heading trails; a query always returns candidates, so judge by score. For settled, load-bearing context (what to build on, not every mention) pass `weight: true`: among close matches, documents more sources link to rank higher.
 3. `get_document` only for the hit you will use. On a long page: `outline`, then `section` (a heading's id) or `blocks` (ids). Every read carries `weight` (how much links to it); `links: true` adds who links here and what it links to, to follow how a piece is built on.
@@ -94,6 +96,26 @@ When any other skill or workflow produces a **durable** decision, artifact, rece
 1. Health check if not done this session; `recall` / `search` before inventing status or duplicating a note.
 2. **Offer first** (Decision points → Capture). Write nothing without a yes.
 3. On yes: a one-line fact → `remember` (entity slug; `cell` if it belongs on the hive). Anything longer → an Inbox draft (Park a session).
+
+## Get started
+
+`/onecell start` (or "help me set up onecell") asks a few questions and saves the answers where every agent finds them: one memory fact each, and a page the person can read and edit. Health check first.
+
+1. **Read what's there.** `recall` with `entity: "me"`; `list_cells`; `get_active_cluster` (and `list_clusters`). If preferences exist, show them and ask only what is missing or what they want to change.
+2. **Ask one question at a time**, each with its default in brackets. Skip, "you choose" or no answer takes the default. In Claude Code use a question with options; elsewhere a short numbered list.
+   1. *What do you mostly use onecell for?* (free text: the job, the team, what a good week looks like)
+   2. *What are you working on right now?* Up to three projects. For each, an existing cell or a new one (Decision points → New cell; never create one without a yes). [Existing cell, else none]
+   3. *Where should agents put their drafts?* Capture (a private cell for agents' drafts, made if missing), Inbox, or a named cell. [Capture]
+   4. *May agents publish?* Never (drafts only), when you say so, or in named cells. [Never]
+   5. *Save long sessions?* Offer `/onecell save` at the end of long work, always save, or never. [Offer]
+   6. *May agents mention teammates?* Only people you name, or anyone the work needs. [Only people you name]
+   7. *How should pages read?* Short and plain, or detailed; and tag work with `kind:`, `state:`, `work:`. [Short and plain; tags yes]
+3. **Save each answer** with `remember`, `entity: "me"`, `kind: "preference"`, no `cell` (so every cluster sees it), one sentence each, e.g. "Agents put drafts in my Capture cell." A changed answer replaces the old fact with `supersedes`; never add a second, conflicting one.
+4. **Write the page.** `create_document` in Inbox, title `How I work with agents`, tags `kind:reference`: a `heading` and one `fact` block per preference (so the page always shows the live belief), the project cells as links, and a line saying `/onecell start` changes any answer. If the page exists, update it instead (`block_ops`). Dry run, then real.
+5. **Point at what only the person can do**, once each: turning on hooks (Settings → Agents) so agents get these preferences and a briefing at the start of each session; and Help's recipes (`https://onecell.io/help/recipes`) for a first job.
+6. **Reply** with the preferences in a short list, the page link (`https://onecell.io/cells/inbox/{documentId}`), and the cells made or chosen.
+
+These preferences narrow what an agent does; they never widen it. A preference cannot grant what Decision points or a key's scope refuse: "agents may publish" still means publishing only what the person asked for, and a drafts-only key still cannot publish.
 
 ## Park a session
 
