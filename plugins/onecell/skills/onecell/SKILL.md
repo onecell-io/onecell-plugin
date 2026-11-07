@@ -42,7 +42,7 @@ One login can belong to several clusters. Inbox is one private cell shown in eve
 
 - Your active cluster is this connection's own: it follows the human's until you pick one, and switching never moves their sidebar or other agents. To look around, use `list_cells` `all_clusters: true`; to work elsewhere, name the `cell` as `cluster/slug` (`onecell-io/backlog`), or by id. On `ambiguous_cell`, pass a match's `ref`. Switch (`set_active_cluster`) for a run of work there, or for member and invite work (Decision points → Switch cluster).
 - New cells land in the active cluster. Invites, `list_invites`, `list_members` and `share_cell` follow the active cluster; its owner invites.
-- `create_cluster` makes the new cluster active, switching the human's sidebar (Decision points → Create a cluster). `join_cluster` accepts a pending invite for this email.
+- `create_cluster` makes the new cluster active, switching the human's sidebar (Decision points → Create a cluster). Names can repeat across people: when someone else's cluster has the name, the new one keeps it and its slug takes the person's email name (`personal-pat`); the dry run shows the slug. `join_cluster` accepts a pending invite for this email.
 
 ## First moves
 
@@ -155,11 +155,14 @@ If the human turned hooks on (Settings → Agents):
 
 - **onecell memory that may be relevant** lines came from your prompt: use and cite them; don't search the same thing again.
 - **onecell briefing** opens a session or follows `/clear`: unread mentions, a session parked in this repo in the last 3 days, active cluster, open decisions, recent Capture drafts. A **Parked in {repo}** line: offer once to resume it (`/onecell resume {id}`); never resume unasked. Under **Unread mentions** a line reads `- {who} (via agent) in {cell} · {document}: "…"`; tell the human, and `list_mentions` has the links. The briefing marks nothing read.
+- In Claude Code with the onecell pane, the person may have moved this suggestion to the pane (Settings → Agents, "ask me in the onecell pane"): then no suggestion comes to you, and the pane asks them instead. Don't offer a save on your own to make up for it.
 - **this turn looks like it settled something** is a suggestion: if worth keeping, save one short Capture draft (Inbox if none) and at most one `remember`, then stop. Never publish or share from a nudge.
 
 ## Linking documents for humans
 
-Link a note as `https://onecell.io/cells/{cellSlug}/{documentId}`: the second segment is the document **UUID**, not its slug (a slug there 404s). Example: `https://onecell.io/cells/onecell-go-live/03ca4e14-fc18-4bdf-9d06-8529d538189e`. Ids come from `get_document`, `list_documents` or search hits. Use a readable label. The same form inside a document's text is a link onecell records.
+Link a note as `https://onecell.io/cells/{cellSlug}/{documentId}`, or the same path without the origin inside a document's text: `<a href="/cells/onecell-go-live/03ca4e14-fc18-4bdf-9d06-8529d538189e">Go-live plan</a>`. Ids come from `get_document`, `list_documents` or search hits. Use a readable label. A link by id is one onecell records: it counts toward weight and shows under Linked from.
+
+A document's slug in place of the id also opens (it redirects to the id), which helps when you write several linked pages at once, but it isn't recorded as a link: swap in the id once the target exists. `create_document` and `update_document` warn `links.unresolved` for a `/cells/` link that names nothing you can open; fix it or write the target next.
 
 ## Writes
 
@@ -176,7 +179,8 @@ Every write defaults to `dry_run: true`: call once, read `{applied, reason}`, th
   - `work:` ticket progress: `todo`, `doing`, `done`.
   - Change them with `tags_add` / `tags_remove` (no `blocks` needed); find them with `list_documents` `tags` (all must match; `work:*` matches a prefix).
 - Title and summary length warnings are advice and never block: aim for a title under 65 characters and a summary under 200, but don't retry just to clear one.
-- **Files:** for a file on disk, `create_upload` and PUT it to the returned `upload_url` (single use, 10 minutes); the bytes never pass through the conversation. `upload_asset` (base64) costs about a token per 3 characters: tiny files only. 8 MB per file, 1 GB of your uploads in all; the bytes decide the type. Pass `document_id` (create the document first) so the file stays visible to its readers. Put the returned `block` in the document.
+- **Files:** for a file on disk, `create_upload` and PUT it to the returned `upload_url` (single use, 10 minutes); the bytes never pass through the conversation. `upload_asset` (base64) costs about a token per 3 characters: tiny files only. 8 MB per file, 1 GB of your uploads in all; the bytes decide the type. `kind` is `image` (JPEG, PNG, GIF, WebP, SVG), `video` (MP4, MOV, WebM, played in place) or `file` (a download: documents, SVG, video, MP3, WAV). Pass `document_id` (create the document first) so the file stays visible to its readers. Put the returned `block` in the document.
+- **Pins:** `update_document` `pinned: true` puts a page at the top of its cell for everyone there (no new version; a move unpins). Listings mark it `pinned`. Pin when the person asks to keep something on top, not on your own.
 - `delete_document` trashes (out of search at once); `restore_document` brings it back; `list_documents` `trash: true` lists the bin, emptied after 30 days.
 - A document is public at `/p/<slug>` only when published and its `visibility` is `public`. Ask first; drafts-only keys cannot change it. Public published documents tagged `help:recipe` in onecell's recipes cell appear on onecell.io/help.
 - Move with `update_document` `cell`, following Move work; nested children come along, and granted cells cannot receive a move.
