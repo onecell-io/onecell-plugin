@@ -51,7 +51,7 @@ One login can belong to several clusters. Inbox is one private cell shown in eve
 2. `search` the question (optional `cell`). Hits come grouped by document with short passages and heading trails; a query always returns candidates, so judge by score. For settled, load-bearing context (what to build on, not every mention) pass `weight: true`: among close matches, documents more sources link to rank higher.
 3. `get_document` only for the hit you will use. On a long page: `outline`, then `section` (a heading's id) or `blocks` (ids). Every read carries `weight` (how much links to it); `links: true` adds who links here and what it links to, to follow how a piece is built on.
 
-Cite as: cell · heading path · passage. Never paste a whole document into the reply.
+Cite as: cell · heading path · passage. Never paste a whole document into the reply. A passage with `factIds` quotes a remembered fact at its current value; `get_fact` gives its source and date.
 
 Archived documents are history (superseded pricing, a retired process): `search` leaves them out. Pass `include_archived: true` only when the human asks what used to be true; those hits carry `archived: true`. Never cite one as current; say "(archived)" when you mention it.
 
