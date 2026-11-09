@@ -6,6 +6,7 @@ This plugin installs both halves in one step:
 
 - **The onecell MCP server** (`https://onecell.io/api/mcp`), so Claude Code can list your cells, search and cite them, remember facts, and write drafts.
 - **The onecell skills** — the rules Claude Code follows: Inbox vs hive, dry runs before writes, search then cite, and when to ask you before moving, sharing or publishing anything.
+- **onecell-delivery** — for teams that keep their backlog in onecell: moves your tickets as work starts, goes to review and merges, runs sprint planning, checks and close, prepares releases, and answers when something will ship. It reads your team's Delivery conventions page.
 
 ## Install
 
