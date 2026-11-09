@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Map</title>
+<link rel="stylesheet" href="/sandbox/vendor/maplibre-gl@5.24.0/maplibre-gl.css">
+<script src="/sandbox/vendor/maplibre-gl@5.24.0/maplibre-gl.js"></script>
+<style>
+  /* Colour tokens: light, then dark. Paint properties read them at style.load. */
+  :root { --bg:#f7f6f3; --card:#fff; --ink:#1c1b19; --muted:#6f6a62; --line:#e4e0d8;
+          --a:#2a78d6; --b:#eb6834; --good:#1baf7a; --recheck:#eda100; --drop:#d64545; --todo:#6f6a62;
+          color-scheme: light; }
+  :root[data-onecell-theme="dark"] { --bg:#121615; --card:#1a201e; --ink:#e8efec; --muted:#93a39c; --line:#2a3330;
+          --a:#5b9be6; --b:#f07a4a; --good:#3cc59e; --recheck:#f2b62e; --drop:#ef6b6b; --todo:#a79c94;
+          color-scheme: dark; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--ink); }
+  body { font: 14px/1.45 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; padding: 16px; }
+  h1 { font-size: 17px; margin: 0 0 10px; }
+  .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin-bottom: 10px; }
+  label.layer { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; cursor: pointer; }
+  .sw { width: 10px; height: 10px; border-radius: 50%; display: inline-block; flex: none; }
+  .ring { background: transparent; border: 2px solid; }
+  #map { height: 520px; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: var(--card); }
+  .note { color: var(--muted); font-size: 12px; margin-top: 8px; }
+  .warn { color: var(--b); }
+  .maplibregl-popup-content { background: var(--card); color: var(--ink); font: 12px/1.45 ui-sans-serif, system-ui, sans-serif;
+                              border: 1px solid var(--line); border-radius: 8px; padding: 7px 9px; }
+  .maplibregl-popup-tip { display: none; }
+  .maplibregl-popup-content b { display: block; margin-bottom: 2px; }
+  .maplibregl-popup-content span { color: var(--muted); }
+</style>
+</head>
+<body>
+  <h1>TITLE</h1>
+  <div class="row">
+    <label class="layer"><input type="checkbox" id="showPoints" checked><i class="sw" style="background:var(--a)"></i>Points</label>
+    <label class="layer"><input type="checkbox" id="showItems" checked><i class="sw ring" style="border-color:var(--ink)"></i><span id="itemsLabel">Items</span></label>
+  </div>
+  <div id="map" role="region" aria-label="MAP DESCRIPTION"></div>
+  <p class="note" id="note"></p>
+<script>
+(function () {
+  // Layers (set on the sandbox block, never linked in the HTML):
+  //   points          an uploaded GeoJSON file
+  //   items           a collection on THIS page (live), or
+  //   items_snapshot  an uploaded copy of it, used when the collection is on another page
+  var $ = function (id) { return document.getElementById(id); };
+  function note(msg, warn) { var n = $('note'); n.textContent = msg; n.className = warn ? 'note warn' : 'note'; }
+  var L = (window.onecell && window.onecell.layers) || {};
+  if (!window.maplibregl) return note('The map library did not load, so the map cannot be drawn.', true);
+  if (!L.points) return note('The map data layer is not available to you.', true);
+  var ITEMS = L.items || L.items_snapshot, live = !!L.items;
+  $('itemsLabel').textContent = 'Items (' + (live ? 'live' : ITEMS ? 'snapshot' : 'not available') + ')';
+
+  var BOUNDS = [[-125, 24], [-66, 50]];   // [[west, south], [east, north]]
+  function css(v) { return getComputedStyle(document.documentElement).getPropertyValue(v).trim(); }
+  function dark() { return document.documentElement.getAttribute('data-onecell-theme') === 'dark'; }
+  function styleUrl() { return '/sandbox/maps/style/' + (dark() ? 'dark' : 'light') + '.json'; }
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+
+  var map = new maplibregl.Map({ container: 'map', style: styleUrl(), bounds: BOUNDS,
+                                 fitBoundsOptions: { padding: 24 }, attributionControl: { compact: true } });
+  map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
+  // Style errors (a bad expression, a null filter) otherwise fail silently.
+  map.on('error', function (e) { note('Map error: ' + ((e && e.error && e.error.message) || 'unknown') + '.', true); });
+
+  function addLayers() {
+    map.addSource('points', { type: 'geojson', data: L.points });
+    map.addLayer({ id: 'points', type: 'circle', source: 'points',
+      layout: { visibility: $('showPoints').checked ? 'visible' : 'none' },
+      paint: { 'circle-color': css('--a'), 'circle-radius': ['interpolate', ['linear'], ['zoom'], 4, 3, 10, 7],
+               'circle-stroke-color': css('--card'), 'circle-stroke-width': 1 } });
+    if (ITEMS) {
+      map.addSource('items', { type: 'geojson', data: ITEMS });
+      // Omit `filter` entirely when there is none: filter: null drops the layer.
+      map.addLayer({ id: 'items', type: 'circle', source: 'items',
+        layout: { visibility: $('showItems').checked ? 'visible' : 'none' },
+        paint: { 'circle-color': 'rgba(0,0,0,0)', 'circle-radius': ['interpolate', ['linear'], ['zoom'], 4, 6, 10, 11],
+                 'circle-stroke-width': 2.5,
+                 'circle-stroke-color': ['match', ['get', 'status'], 'good', css('--good'), 'recheck', css('--recheck'),
+                                         'drop', css('--drop'), css('--todo')] } });
+    }
+    note(ITEMS && !live ? 'Item statuses are a snapshot; the live ones are on their own page.' : '');
+  }
+  map.on('style.load', addLayers);
+
+  // Popups: escape every value, numbers included.
+  var popup = new maplibregl.Popup({ closeButton: false, offset: 8, maxWidth: '280px' });
+  map.on('click', function (e) {
+    var hits = map.queryRenderedFeatures(e.point, { layers: ['items', 'points'].filter(function (id) { return map.getLayer(id); }) });
+    if (!hits.length) return popup.remove();
+    var p = hits[0].properties, lines = ['<b>' + esc(p.name || p.title || p.key) + '</b>'];
+    if (p.statusLabel || p.status) lines.push('<span>Status</span> ' + esc(p.statusLabel || p.status));
+    popup.setLngLat(e.lngLat).setHTML(lines.join('<br>')).addTo(map);
+  });
+  ['items', 'points'].forEach(function (id) {
+    map.on('mouseenter', id, function () { map.getCanvas().style.cursor = 'pointer'; });
+    map.on('mouseleave', id, function () { map.getCanvas().style.cursor = ''; });
+  });
+
+  [['showPoints', 'points'], ['showItems', 'items']].forEach(function (pair) {
+    $(pair[0]).addEventListener('change', function () {
+      if (map.getLayer(pair[1])) map.setLayoutProperty(pair[1], 'visibility', this.checked ? 'visible' : 'none');
+    });
+  });
+  // Follow the reader's theme: a full style reload fires style.load, which re-adds the layers.
+  new MutationObserver(function () { map.setStyle(styleUrl(), { diff: false }); })
+    .observe(document.documentElement, { attributes: true, attributeFilter: ['data-onecell-theme'] });
+})();
+</script>
+</body>
+</html>
