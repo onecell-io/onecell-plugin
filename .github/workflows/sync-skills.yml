@@ -21,7 +21,7 @@ jobs:
       - name: Pull the live skills
         run: |
           set -euo pipefail
-          for skill in onecell onecell-bridge onecell-delivery onecell-map onecell-cards-collection; do
+          for skill in onecell onecell-bridge onecell-delivery onecell-map onecell-cards-collection onecell-handoff; do
             mkdir -p "plugins/onecell/skills/${skill}"
             curl -fsS "https://onecell.io/skills/${skill}.md" -o "plugins/onecell/skills/${skill}/SKILL.md.new"
             # A skill always opens with its frontmatter; anything else (an error page,

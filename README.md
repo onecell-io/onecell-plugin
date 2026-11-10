@@ -9,6 +9,7 @@ This plugin installs both halves in one step:
 - **onecell-delivery** — for teams that keep their backlog in onecell: moves your tickets as work starts, goes to review and merges, runs sprint planning, checks and close, prepares releases, and answers when something will ship. It reads your team's Delivery conventions page.
 - **onecell-map** — puts your data on a map in a onecell page: the core map block first, a hand-built sandbox map only when the block can't do it. Comes with a CSV-to-GeoJSON script and a sandbox map template.
 - **onecell-cards-collection** — turns a list with a picture per row into a collection of cards your team vets one at a time, and reads their verdicts back. Comes with a script that builds the item batches.
+- **onecell-handoff** — passes work in progress to a teammate: pushes the code to a recorded commit, writes a handoff page they can open, and on their side checks out that commit, runs the checks and takes the ticket over.
 
 ## Install
 
