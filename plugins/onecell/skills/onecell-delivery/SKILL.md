@@ -74,6 +74,8 @@ ticket the person names. Then, without asking, and saying what you changed in on
 - Never write a `state:` tag. Never mark a ticket done because the code looks finished.
 - No ticket matches? Ask which one, or offer to file one (below). Don't guess.
 
+**Handing a ticket to someone else** mid-work: follow `https://onecell.io/skills/onecell-handoff.md`; the ticket's owner moves when they pick it up.
+
 **Filing a ticket.** In `backlog`, as a draft: a title that starts with its code, a
 one-sentence summary, a Problem, a Fix and an Acceptance checklist. Tags: the first of
 `ticket_tags`, `work:todo`, its `stream:` tags (one per repo it touches), `area:` tags if

@@ -25,9 +25,21 @@ When this skill runs as a command, its argument says what to do:
 - `/onecell resume [words | link]`: Resume a session, below. Words narrow the list; a page link or id resumes that page.
 - `/onecell` alone: the health check, then unread mentions and what is open.
 
+## Delivery work
+
+Tickets moving as work starts, goes to review and merges; sprint planning, checks and close; release prep; and questions about when something ships: follow `https://onecell.io/skills/onecell-delivery.md`, which reads the team's Delivery conventions page (tagged `kind:delivery-conventions`) for its streams, repos and cadence.
+
+## Maps and cards
+
+A map on a page (pins, uploaded GeoJSON, a collection as a layer): follow `https://onecell.io/skills/onecell-map.md`. A list with a picture per row turned into cards people vet one at a time: follow `https://onecell.io/skills/onecell-cards-collection.md`. Each comes with its scripts and templates, linked from the skill.
+
+## Handing work to a teammate
+
+Someone stopping while a teammate carries on, or picking up what a teammate left: follow `https://onecell.io/skills/onecell-handoff.md`. It pushes the code to a recorded commit, writes a handoff page the teammate can open, and on pickup checks out that commit and takes the ticket over. `/onecell save` stays for parking your own session.
+
 ## Keep this skill fresh
 
-Saved copies drift. Once per agent session, after MCP connects and before real hive work: re-fetch `https://onecell.io/skills/onecell.md` (and `https://onecell.io/skills/onecell-bridge.md` if this client keeps it) and overwrite the local copies. If the live skill names tools you do not have, re-run agent-setup: a skill file alone is not a working install.
+Saved copies drift. Once per agent session, after MCP connects and before real hive work: re-fetch `https://onecell.io/skills/onecell.md` (and `https://onecell.io/skills/onecell-bridge.md`, `onecell-delivery.md`, `onecell-map.md`, `onecell-cards-collection.md` and `onecell-handoff.md` if this client keeps them) and overwrite the local copies. If the live skill names tools you do not have, re-run agent-setup: a skill file alone is not a working install.
 
 ## Health check
 
